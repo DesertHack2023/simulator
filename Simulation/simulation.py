@@ -1,9 +1,9 @@
 from datetime import now as curr_time
 from random import seed
 
-from Floorplan import Floorplan
-from Frame import Frame
-from Params import Params
+from floorplan import Floorplan
+from frame import Frame
+from params import Params
 
 
 class Simulation:

@@ -1,4 +1,4 @@
-from Agent import Agent
+from agent import Agent
 
 
 class Frame:
