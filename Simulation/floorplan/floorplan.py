@@ -1,4 +1,4 @@
-from floorplan.floorplan import wall
+from floorplan.wall import Wall
 
 class Floorplan:
 	'''Contains information and behaviours regarding the floorplan of the simulation space
@@ -7,9 +7,8 @@ class Floorplan:
 	----------
 	num_cells: int
 			The number of cells in the simulation space
-	graph: List[List[Tuple[int, List[Wall]]]]
+	graph: List[List[int]]
 			The adjacency list representation of the connections between cells
-			with the information about shared walls
 	cells: List[List[Wall]]
 			The list of walls for each cell polygon
 	

@@ -1,7 +1,7 @@
 from datetime import now as curr_time
 from random import seed
 
-from floorplan import Floorplan
+from floorplan.floorplan import Floorplan
 from frame import Frame
 from params import Params
 
