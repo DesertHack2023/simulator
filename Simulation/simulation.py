@@ -7,13 +7,16 @@ from params import Params
 
 
 class Simulation:
-    """
-    This class controls the flow of the simulation. It is an agent based simulation where the "people" (represented by agents) are free to move within a virtual 2D floorplan. The movement of the agents are controlled by some forces (attractive or repulsive) as well as some random element of free will for each agent. Further more
+    """Controls the flow of the simulation.
+
+    The simulation is an agent based simulation where the "people" (represented by agents) are free to move within a virtual 2D floorplan. The movement of the agents are controlled by some forces (attractive or repulsive) as well as some random element of free will for each agent. Further more
 
     Attributes
     ----------
     params: Params
             Starting simulation parameters
+    floorplan: Floorplan
+            The floorplan of the simulation space
     frame: Frame
             The current frame of the simulation
 

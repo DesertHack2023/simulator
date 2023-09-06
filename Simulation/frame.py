@@ -11,7 +11,20 @@ class Frame:
 
     Methods
     -------
-    __init__(self: Frame, people)
+    __init__(self: Frame, agents: List[List[Agent]])
     """
 
-    pass
+    def __init__(self, agents):
+        '''Initializes the Agents within the frame
+
+        Parameters
+        ----------
+        agents: List[List[Agents]]
+                List of people in each cell of the simulation space
+
+        Returns
+        -------
+        None
+        '''
+
+        self.agents = agents
