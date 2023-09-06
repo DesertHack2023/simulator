@@ -1,6 +1,5 @@
 from dataclasses import dataclass
-from math import log
-
+from typing import NamedTuple
 
 @dataclass
 class Params:
@@ -8,7 +7,7 @@ class Params:
     WIDTH = 100
     HEIGHT = 100
     POPULATION_SIZE = 2500
-    POPULATION_DEMOGRAPHICS = [0.35, 0.8, 0.95, 1]
+    POPULATION_DEMOGRAPHICS = NamedTuple([0.35, 0.8, 0.95, 1])
     SIMULATION_LENGTH = 180
     MAX_MOVEMENT = 0.05
     TRAVEL_RATE = 0.1

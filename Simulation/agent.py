@@ -4,13 +4,13 @@ class Agent:
     Attributes
     ----------
     cell: int
-            The current cell that the agent is in
+        The current cell that the agent is in
     x: float
-            X-coordinate of the agent
+        X-coordinate of the agent
     y: float
-            Y-coordinate of the agent
+        Y-coordinate of the agent
     age: int
-            The age of the agent
+        The age of the agent
 
     Methods
     -------
@@ -18,19 +18,21 @@ class Agent:
             Initialize the agent with some properties
     """
 
-    def __init__(self, cell, x, y, age):
+    def __init__(self, cell, x, y, age, dest):
         """Sets some initial parameters for the person
 
         Parameters
         ----------
         cell: int
-                The starting cell of the agent
+            The starting cell of the agent
         x: int
-                The starting X-coordinate
+            The starting X-coordinate
         y: int
-                The starting Y-coordinate
+            The starting Y-coordinate
         age: int
-                The age of the agent
+            The age of the agent
+        dest: int
+            The destination cell of the agent
 
         Returns
         -------
@@ -41,3 +43,4 @@ class Agent:
         self.x = x
         self.y = y
         self.age = age
+        self.dest = dest

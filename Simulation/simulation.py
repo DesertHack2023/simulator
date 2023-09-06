@@ -1,10 +1,11 @@
 from datetime import now as curr_time
-from random import seed
+from random import seed, uniform, random
+from bisect import bisect_left
 
 from floorplan.floorplan import Floorplan
 from frame import Frame
 from params import Params
-
+from agent import Agent
 
 class Simulation:
     """Controls the flow of the simulation.
@@ -32,15 +33,17 @@ class Simulation:
             Calculates the next frame of the simulation
     """
 
-    def __init__(self, params):
+    def __init__(self, params, floorplan):
         """Initialized the simulation
 
         Intializes the simulation with some basic properties
 
         Parameters
         ----------
-        params : Params
-          The parameters of the simulation
+        params: Params
+                The parameters of the simulation
+        floorplan: Floorplan
+                The floorplan of the simulation
 
         Returns
         -------
@@ -48,11 +51,33 @@ class Simulation:
         """
 
         self.params = params
-        self.frame = self.initializeFrame()
+        self.floorplan = floorplan
+        self.initializeFrame()
 
     def initializeFrame(self):
-        # TODO: Complete frame initialization function
-        pass
+        '''Creates the first frame of the simulation
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        None
+        '''
+
+        agents = []
+        for dest, num_agents in enumerate(self.floorplan.distribution):
+            for _ in range(num_agents):
+                x = uniform(0, self.params.WIDTH)
+                y = uniform(0, self.params.HEIGHT)
+                cell = self.floorplan.find_cell(x, y)
+                age = bisect_left(self.params.POPULATION_DEMOGRAPHICS, random())
+
+                # Create agent
+                agents.append(Agent(cell, x, y, age, dest))
+
+        # Create frame
+        self.frame = Frame(agents)
 
     def runSimulation(self):
         """Run the simulation.
@@ -66,7 +91,7 @@ class Simulation:
         Yields
         ------
         Frame
-          Constantly yields frames of simulation as they are calculated
+            Constantly yields frames of simulation as they are calculated
 
         Returns
         -------
