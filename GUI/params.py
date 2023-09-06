@@ -3,6 +3,7 @@ import time
 import typing
 from dataclasses import dataclass, fields
 from math import log
+from typing import NamedTuple
 
 import anytree
 import dearpygui.dearpygui as dpg
@@ -144,21 +145,21 @@ class BasicParams:
     # Contact radius
     # The contact radius is a function of the population density
     # CONTACT_RADIUS = 3 / POPULATION_DENSITY
-    CONTACT_RADIUS = 3 / POPULATION_SIZE
-    CONTACT_RADIUS_SQUARED = CONTACT_RADIUS**2
+    CONTACT_RADIUS: float = 3 / POPULATION_SIZE
+    CONTACT_RADIUS_SQUARED: float = CONTACT_RADIUS**2
 
 
 @dataclass
 class StateTransitionParams:
     # State transition related parameters
-    INITIAL_INFECTED = 2
-    INFECTION_RATE = 0.2
-    HOSPITALIZATION_RATE = 0.5
-    MORTALITY_RATE = 0.2 * HOSPITALIZATION_RATE
-    MORTALITY_COEFFICIENT = 2
-    INCUBATION_PERIOD = 5
-    INFECTION_PERIOD = 10
-    IMMUNITY_PERIOD = 30
+    INITIAL_INFECTED: int = 2
+    INFECTION_RATE: float = 0.2
+    HOSPITALIZATION_RATE: float = 0.5
+    MORTALITY_RATE: float = 0.2 * HOSPITALIZATION_RATE
+    MORTALITY_COEFFICIENT: int = 2
+    INCUBATION_PERIOD: int = 5
+    INFECTION_PERIOD: int = 10
+    IMMUNITY_PERIOD: int = 30
 
 
 @dataclass
@@ -186,4 +187,19 @@ class ParameterSelector:
             logger.debug(field)
             name = field.name.replace("_", " ").title()
             with dpg.tree_node(parent=self.parent, label=name) as node:
-                dpg.add_text("blah blah", parent=node)
+                parameter_group = getattr(params, field.name)
+                logger.debug(parameter_group)
+                for parameter_field in fields(parameter_group):
+                    variable = getattr(parameter_group, parameter_field.name)
+                    label = parameter_field.name.replace("_", " ").title()
+                    match variable:
+                        case int():
+                            dpg.add_input_int(
+                                parent=node, default_value=variable, label=label
+                            )
+                        case float():
+                            dpg.add_input_float(
+                                parent=node, default_value=variable, label=label
+                            )
+                        case _:
+                            dpg.add_text("haven't done this type yet")
