@@ -1,9 +1,17 @@
-from dataclasses import dataclass
+import logging
+import time
+import typing
+from dataclasses import dataclass, fields
 from math import log
+
+import anytree
+import dearpygui.dearpygui as dpg
+
+logger = logging.getLogger("GUI.TreeSelector")
 
 
 @dataclass
-class Params:
+class BasicParams:
     # Basic model related parameters
     POPULATION_SIZE = 2500
     POPULATION_DEMOGRAPHICS = [0.35, 0.8, 0.95, 1]
@@ -133,13 +141,15 @@ class Params:
             ],
         ],
     ]
-
     # Contact radius
     # The contact radius is a function of the population density
     # CONTACT_RADIUS = 3 / POPULATION_DENSITY
     CONTACT_RADIUS = 3 / POPULATION_SIZE
     CONTACT_RADIUS_SQUARED = CONTACT_RADIUS**2
 
+
+@dataclass
+class StateTransitionParams:
     # State transition related parameters
     INITIAL_INFECTED = 2
     INFECTION_RATE = 0.2
@@ -150,46 +160,30 @@ class Params:
     INFECTION_PERIOD = 10
     IMMUNITY_PERIOD = 30
 
-    # Metrics related parameters
-    DOUBLING_TIME_WINDOW_LENGTH = 3
-    LOG_2 = log(2)
-    PLOT_EFFECTIVE_REPRODUCTIVE_NUMBER = False
 
-    # Intervention related parameters
-    RULE_COMPLIANCE_RATE = 0.9
+@dataclass
+class Params:
+    basic: BasicParams = BasicParams()
+    state_transition_params: StateTransitionParams = StateTransitionParams()
 
-    # Hospital related paramters
-    HOSPITAL_CAPACITY = 0.06
-    HOSPITALIZATION_COST = 5000
-    HOSPITAL_ENABLED = False
 
-    # Vaccination related parameters
-    VACCINATION_ENABLED = False
-    VACCINATION_START = 60
-    VACCINATION_RATE = 0.01
-    VACCINATION_COST = 1000
-    INITIAL_VACCINATED = 0
+class SelectionError(Exception):
+    pass
 
-    # Lockdown related parameters
-    LOCKDOWN_ENABLED = False
-    LOCKDOWN_COST = 500
-    LOCKDOWN_DAYS = []
-    LOCAL_LOCKDOWN = False
-    LOCKDOWN_STRATEGY = "block"
 
-    # Lockdown strategy related parameters
-    LOCKDOWN_LEVEL = 0.5
-    LOCKDOWN_START = 50
-    LOCKDOWN_STOP = 100
-    ALT_LOCKDOWN_FRAMES_ON = 20
-    ALT_LOCKDOWN_FRAMES_OFF = 10
-    DAY_LOCKDOWN = [True, True, True, True, True, False, False]
+class ParameterSelector:
+    """
+    creates a dynamic selection window, based on the Params class
+    """
 
-    # Hygiene related parameters
-    HYGIENE_ENABLED = False
-    HYGIENE_RATE = 0.6
-    HYGIENE_COST = 100
+    def __init__(self, parent):
+        self.parent = parent
+        self._render()
 
-    # Travel restrictions related parameters
-    TRAVEL_RESTRICTIONS_ENABLED = False
-    TRAVEL_RESTRICTIONS_COST = 200
+    def _render(self):
+        params = Params()
+        for field in fields(params):
+            logger.debug(field)
+            name = field.name.replace("_", " ").title()
+            with dpg.tree_node(parent=self.parent, label=name) as node:
+                dpg.add_text("blah blah", parent=node)

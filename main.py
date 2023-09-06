@@ -42,9 +42,7 @@ def main():
                     dpg.add_text("IDK Something", parent=idk)
             with dpg.table_row():
                 with dpg.child_window() as parameters:
-                    dpg.add_text(
-                        "This is where the parameters will be set", parent=parameters
-                    )
+                    GUI.ParameterSelector(parent=parameters)
                 with dpg.child_window() as no_idea:
                     dpg.add_text(
                         "IDK Something, the frames or something", parent=no_idea
