@@ -23,6 +23,10 @@ class Wall:
 			Checks whether a line intersects with the wall
 	'''
 
+	# Wall states
+	DOOR = 0
+	WALL = 1
+
 	def __init__(self, endpoints, state, connection):
 		'''Initializes the Wall instance
 
