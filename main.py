@@ -38,15 +38,13 @@ def main():
                     log.setFormatter(formatter)
                     TimelapseLogger.addHandler(log)
                     GUI_Logger.addHandler(log)
-                with dpg.child_window(height=350) as idk:
-                    dpg.add_text("IDK Something", parent=idk)
-            with dpg.table_row():
-                with dpg.child_window() as parameters:
+                with dpg.child_window(height=350) as parameters:
                     GUI.ParameterSelector(parent=parameters)
+            with dpg.table_row():
                 with dpg.child_window() as no_idea:
-                    dpg.add_text(
-                        "IDK Something, the frames or something", parent=no_idea
-                    )
+                    dpg.add_text("IDK the behaviour or something", parent=no_idea)
+                with dpg.child_window() as frame:
+                    GUI.Frame(parent=frame, edges=[])
 
     dpg.setup_dearpygui()
     dpg.set_primary_window("Primary Window", True)
