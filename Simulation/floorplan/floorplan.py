@@ -14,9 +14,9 @@ class Floorplan:
 		The list of walls for each cell polygon
 	distribution: List[int]
 		The intended distribution of each person amongst the cells
-	doorTocell: List[List[float]]
-		The distances between every pair of door and cell
-	
+	distances: List[List[float]]
+		The distances between every pair of doors
+
 	Methods
 	-------
 	__init__(graph: List[List[int]], walls: List[List[int]])
@@ -51,9 +51,9 @@ class Floorplan:
 
 		# Find shortest distances between every pair of door and cell
 		self.find_shortest_paths()
-	
+
 	def find_shortest_paths(self):
-		'''Calculate the shortest path between every pair of door and cell
+		'''Calculate the shortest path between every pair of doors
 
 		This function uses the Flloyd-Warshall algorithm to compute the 
 		All Pair Shortest Path (APSP) between every pair of doors in the floorplan.
@@ -65,29 +65,48 @@ class Floorplan:
 		-------
 		'''
 
-		# Create a list of doors
-		doors = [wall for walls in self.cells for wall in walls if wall.state == Wall.DOOR]
+		# Find edges of doors
+		doors = []
+		edges = []
+		for walls in self.cells:
+			cell_doors = [wall for wall in walls if wall.state == Wall.DOOR]
+			for i in range(len(cell_doors)):
+				# Distance between each door and itself is 0
+				edges.append((len(doors) + i, len(doors) + i, 0))
+
+				for j in range(i + 1, len(cell_doors)):
+					# Compute distance between each pair of edges
+					door_center = (
+						(cell_doors[j].endpoints[0][0] + cell_doors[j].endpoints[1][0]) / 2,
+						(cell_doors[j].endpoints[0][1] + cell_doors[j].endpoints[1][1]) / 2
+					)
+					edges.append((
+						len(doors) + i,
+						len(doors) + j, 
+						cell_doors[i].distance_to_door(door_center)
+					))
+
+			doors += cell_doors
+
+		# Compute adjacency matrix of the graph
 		num_doors = len(doors)
 		distance = [[inf] * num_doors for _ in range(num_doors)]
-
-		# Distance between each door and itself is 0
-		for i in range(num_doors):
-			distance[i][i] = 0
-
-		# Distances for doors in the same cell is known
+		for u, v, w in edges:
+			distance[u][v] = w
+			distance[v][v] = w
 
 		# Flloyd-Warshall's algorithm
 		for k in range(num_doors):
 			for i in range(num_doors):
 				for j in range(num_doors):
 					distance[i][j] = min(
-							distance[i][j],
-							distance[i][k] + distance[k][j]
-						)
-	
+						distance[i][j],
+						distance[i][k] + distance[k][j]
+					)
+
 	def find_cell(self, x, y):
 		'''Given the coordinates of a point, find the cell it lies in
-		
+
 		Parameters
 		----------
 		x: int

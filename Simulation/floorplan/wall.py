@@ -1,26 +1,32 @@
+from math import sqrt
+
 class Wall:
 	'''Stores information and behaviours of the walls of the cells
 
 	Attributes
 	----------
 	endpoints: Tuple[Tuple[float, float], Tuple[float, float]]
-			The end points of the wall
+		The end points of the wall
 	state: int
-			The integer that represents the type of wall
-			(open / closed, exit etc.)
+		The integer that represents the type of wall
+		(open / closed, exit etc.)
 	connection: Tuple[float, float]
-			The two cells connected through the wall
-	
+		The two cells connected through the wall
+
 	Methods
 	-------
 	__init__(endpoints: Tuple[Tuple[float, float], Tuple[float, float]], state: int, connection: Tuple[float, float])
-			Initializes the Wall instance
+		Initializes the Wall instance
 	orientation(a: Tuple[int, int], b: Tuple[int, int], c, Tuple[int, int]):
 		Checks the orientation of any three points
 	on_segment(a: Tuple[int, int], b: Tuple[int, int], c, Tuple[int, int]):
 		Checks whether point b lies on line segment ac given a, b, c are collinear
 	intersects(line: Tuple[Tuple[float, float], Tuple[float, float]]): bool
-			Checks whether a line intersects with the wall
+		Checks whether a line intersects with the wall
+	distance_to_door(point: Tuple[int, int]):
+		Calculates the distance between the door and a point
+	get_perpendicular(point: Tuple[int, int]):
+		Returns the perpendicular from a point to the wall
 	'''
 
 	# Wall states
@@ -78,13 +84,13 @@ class Wall:
 		if x > 0:
 			# Anti-clockwise
 			return 2
-		
+
 		# Collinear
 		return 0
 
 	def on_segment(self, a, b, c):
 		'''Checks whether point b lies on line segment ac given a, b, c are collinear
-		
+
 		Parameters
 		----------
 		a: Tuple[float, float]
@@ -129,11 +135,42 @@ class Wall:
 		# General case
 		if (orientations[0] != orientations[1]) and (orientations[2] != orientations[3]):
 			return True
-		
+
 		# Special cases
 		for i in range(len(triplets)):
 			if orientations[i] == 0 and self.on_segment(*triplets[i]):
 				return True
-		
+
 		# Doesn't intersect
 		return False
+
+	def distance_to_door(self, point):
+		'''Calculates the distance between the door and a point
+
+		Parameters
+		----------
+		point: Tuple[int, int]
+			The point from which we are measuring
+
+		Returns
+		-------
+		float
+			The distance between the two doors
+		'''
+
+		# Find the center points of the two doors
+		self_center = (
+			(self.endpoints[0][0] + self.endpoints[1][0]) / 2,
+			(self.endpoints[0][1] + self.endpoints[1][1]) / 2
+		)
+
+		# Return the distance between these two points
+		return sqrt(
+			(self_center[0] - point[0]) ** 2 +
+			(self_center[1] - point[1]) ** 2 
+		)
+	
+	def get_perpendicular(self, point):
+		'''Returns the perpendicular from a point to the wall
+
+		'''

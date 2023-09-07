@@ -1,6 +1,6 @@
-import logging
 from dataclasses import dataclass, field
 from math import sqrt
+import logging
 
 import dearpygui.dearpygui as dpg
 
