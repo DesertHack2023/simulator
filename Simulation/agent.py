@@ -19,7 +19,9 @@ class Agent:
 	Methods
 	-------
 	__init__(self: Agent, cell: int, x: float, y: float, age: int)
-			Initialize the agent with some properties
+		Initialize the agent with some properties
+	vec_to_agent(other: Agent)
+		Calculates the vector of the line segment between two agents
 	"""
 
 	def __init__(self, cell, x, y, age, dest):
@@ -50,3 +52,22 @@ class Agent:
 		self.vy = 0
 		self.age = age
 		self.dest = dest
+	
+	def vec_to_agent(self, other):
+		'''Calculates the vector of the line segment between two agents
+		
+		Parameters
+		----------
+		other: Agent
+			The other agent in consideration
+
+		Returns
+		-------
+		Tuple[float, float]
+			The vector of the directed line segment between the two agents
+		'''
+
+		return (
+			self.x - other.x,
+			self.y - other.y
+		)

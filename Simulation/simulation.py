@@ -1,9 +1,9 @@
 from datetime import now as curr_time
 from random import seed, uniform, random
 from bisect import bisect_left
-from math import sqrt
+from math import sqrt, inf
 
-from floorplan.floorplan import Floorplan
+from floorplan import Floorplan
 from params import Params
 from agent import Agent
 
@@ -152,8 +152,14 @@ class Simulation:
 					agent.vy *= self.params.MAX_VELOCITY / v
 
 				# Update position
+				old_pos = (agent.x, agent.y)
 				agent.x += agent.vx
 				agent.y += agent.vy
+
+				# Check for changes in the agent cell
+				for wall in self.floorplan.cells[agent.cell]:
+					if wall.intersects((old_pos, (agent.x, agent.y))):
+						agent.cell = wall.connection[wall.connection[0] == agent.cell]
 	
 	def calculateForce(self, agent):
 		'''Calculates the forces acting on a given agent
@@ -178,4 +184,55 @@ class Simulation:
 		fy = 0
 
 		# Wall forces
-		pass
+		for wall in self.floorplan.cells[agent.cell]:
+			# Get the perpendicular
+			per = wall.get_perpendicular((agent.x, agent.y))
+			if per == (inf, inf):
+				# Not in range
+				continue
+
+			per_length = sqrt(per[0] ** 2 + per[1] ** 2)
+			if per_length <= self.params.WALL_FORCE_MARGIN:
+				force_per_length = self.params.WALL_FORCE_CONSTANT / per_length ** 3
+				fx += per[0] * force_per_length
+				fy += per[1] * force_per_length
+
+		# Agent-agent forces
+		for other_agent in self.frame[agent.cell]:
+			# Get the connecting vector
+			vec = agent.vec_to_agent(other_agent)
+
+			vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
+			if vec_length < self.params.AGENT_FORCE_MARGIN:
+				force_per_length = self.params.AGENT_FORCE_CONSTANT / vec_length ** 3
+				fx += vec[0] * force_per_length
+				fy += vec[1] * force_per_length
+		
+		if agent.cell == agent.dest:
+			# Goal forces are not applicable
+			return (fx, fy)
+
+		# Goal forces
+		min_door = None
+		min_distance = inf
+		for next_door in self.floorplan.doors[agent.cell]:
+			for dest_door in self.floorplan.doors[agent.dest]:
+				# Calculate total distance of the trip
+				dist = (
+					next_door.distance_to_door((agent.x, agent.y)) + 
+					self.floorplan.distances[next_door.door_node][dest_door.door_node]
+				)
+
+				if dist < min_distance:
+					# Update closest door
+					min_distance = dist
+					min_door = next_door
+
+		# Calculate attractive force from min_door
+		vec = min_door.vec_to_door((agent.x, agent.y))
+		vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
+		force_per_length = self.params.GOAL_FORCE_CONSTANT / vec_length ** 3
+		fx += vec[0] * force_per_length
+		fy += vec[1] * force_per_length
+		
+		return (fx, fy)

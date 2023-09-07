@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, inf
 
 class Wall:
 	'''Stores information and behaviours of the walls of the cells
@@ -12,6 +12,8 @@ class Wall:
 		(open / closed, exit etc.)
 	connection: Tuple[float, float]
 		The two cells connected through the wall
+	door_node: int
+		The node index of a door in the graph
 
 	Methods
 	-------
@@ -54,6 +56,7 @@ class Wall:
 		self.endpoints = endpoints
 		self.state = state
 		self.connection = connection
+		self.door_node = -1
 
 	def orientation(self, a, b, c):
 		'''Checks the orientation of any three points
@@ -170,8 +173,36 @@ class Wall:
 			(self_center[1] - point[1]) ** 2 
 		)
 	
+	def vec_to_door(self, point):
+		'''Returns a vector from the point to the center of the door
+
+		Parameters
+		----------
+		point: Tuple[float, float]
+			The point from which we are measuring
+
+		Returns
+		-------
+		Tuple[float, float]
+			The vector aligned towards the door
+		'''
+
+		# Find the center points of the two doors
+		self_center = (
+			(self.endpoints[0][0] + self.endpoints[1][0]) / 2,
+			(self.endpoints[0][1] + self.endpoints[1][1]) / 2
+		)
+
+		# Return the vector between these two points
+		return sqrt(
+			(self_center[0] - point[0]),
+			(self_center[1] - point[1])
+		)
+	
 	def get_perpendicular(self, point):
 		'''Returns the perpendicular from a point to the wall
+
+		If the foot of the perpendicular doesn't lie on the line segment, we return (inf, inf)
 
 		Parameters
 		----------
@@ -184,4 +215,22 @@ class Wall:
 			The distance between the two doors
 		'''
 
-		pass
+		# If the point is a and the line segment is bc
+		# Let d be a point on bc such that (a - d).(c - b) = 0
+		# d = b + k(c - b)
+		# where k = (a - b).(c - b)
+		# a - d, the perpensidular is equal to (a - b) - (|(a - b).(c - b)| / |c - b|^2) (c - b)
+		# i.e if the p = a - b and q = (c - b) / |c - b|
+		# then a - d = p - (p.q)q
+
+		p = (point[0] - self.endpoints[0], point[0] - self.endpoints[0])
+		q = (self.endpoints[1] - self.endpoints[0], self.endpoints[1] - self.endpoints[0])
+		q_len = sqrt(q[0] ** 2 + q[1] ** 2)
+
+		# Check if 0 <= k <= 1 (foot of perpendicular lies on the line segment)
+		k = (p[0] * q[0] + p[1] * q[1]) / q_len ** 2
+		if k < 0 or k > 1:
+			return (inf, inf)
+		
+		# Return perpendicular
+		return (p[0] - k * q[0], p[1] - k * p[1])

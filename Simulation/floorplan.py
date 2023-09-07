@@ -1,4 +1,4 @@
-from floorplan.floorplan import Wall
+from floorplan import Wall
 from math import inf
 
 class Floorplan:
@@ -11,11 +11,13 @@ class Floorplan:
 	graph: List[List[int]]
 		The adjacency list representation of the connections between cells
 	cells: List[List[Wall]]
-		The list of walls for each cell polygon
+		The list of walls for each cell
 	distribution: List[int]
 		The intended distribution of each person amongst the cells
 	distances: List[List[float]]
 		The distances between every pair of doors
+	doors: List[List[Wall]]
+		THe list of doors for each cell
 
 	Methods
 	-------
@@ -49,6 +51,9 @@ class Floorplan:
 		self.cells = cells
 		self.distribution = distribution
 
+		# Filter list of doors
+		self.doors = [[wall for wall in walls if wall.state == Wall.DOOR] for walls in self.cells]
+
 		# Find shortest distances between every pair of door and cell
 		self.find_shortest_paths()
 
@@ -68,25 +73,27 @@ class Floorplan:
 		# Find edges of doors
 		doors = []
 		edges = []
-		for walls in self.cells:
-			cell_doors = [wall for wall in walls if wall.state == Wall.DOOR]
-			for i in range(len(cell_doors)):
+		for cell_no, walls in enumerate(self.cells):
+			for i in range(len(self.doors[cell_no])):
+				# Assign a node number
+				self.doors[cell_no][i].door_node = len(doors) + i
+
 				# Distance between each door and itself is 0
 				edges.append((len(doors) + i, len(doors) + i, 0))
 
-				for j in range(i + 1, len(cell_doors)):
+				for j in range(i + 1, len(self.doors[cell_no])):
 					# Compute distance between each pair of edges
 					door_center = (
-						(cell_doors[j].endpoints[0][0] + cell_doors[j].endpoints[1][0]) / 2,
-						(cell_doors[j].endpoints[0][1] + cell_doors[j].endpoints[1][1]) / 2
+						(self.doors[cell_no][j].endpoints[0][0] + self.doors[cell_no][j].endpoints[1][0]) / 2,
+						(self.doors[cell_no][j].endpoints[0][1] + self.doors[cell_no][j].endpoints[1][1]) / 2
 					)
 					edges.append((
 						len(doors) + i,
 						len(doors) + j, 
-						cell_doors[i].distance_to_door(door_center)
+						self.doors[cell_no][i].distance_to_door(door_center)
 					))
 
-			doors += cell_doors
+			doors += self.doors[cell_no]
 
 		# Compute adjacency matrix of the graph
 		num_doors = len(doors)
