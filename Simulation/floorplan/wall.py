@@ -23,9 +23,9 @@ class Wall:
 		Checks whether point b lies on line segment ac given a, b, c are collinear
 	intersects(line: Tuple[Tuple[float, float], Tuple[float, float]]): bool
 		Checks whether a line intersects with the wall
-	distance_to_door(point: Tuple[int, int]):
+	distance_to_door(point: Tuple[float, float]):
 		Calculates the distance between the door and a point
-	get_perpendicular(point: Tuple[int, int]):
+	get_perpendicular(point: Tuple[float, float]):
 		Returns the perpendicular from a point to the wall
 	'''
 
@@ -149,7 +149,7 @@ class Wall:
 
 		Parameters
 		----------
-		point: Tuple[int, int]
+		point: Tuple[float, float]
 			The point from which we are measuring
 
 		Returns
@@ -173,4 +173,15 @@ class Wall:
 	def get_perpendicular(self, point):
 		'''Returns the perpendicular from a point to the wall
 
+		Parameters
+		----------
+		point: Tuple[float, float]
+			The point from which we are measuring
+
+		Returns
+		-------
+		float
+			The distance between the two doors
 		'''
+
+		pass

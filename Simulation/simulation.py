@@ -178,3 +178,4 @@ class Simulation:
 		fy = 0
 
 		# Wall forces
+		pass
