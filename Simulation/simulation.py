@@ -1,4 +1,4 @@
-from datetime import now as curr_time
+from datetime import datetime
 from random import seed, uniform, random
 from bisect import bisect_left
 from math import sqrt, inf
@@ -71,6 +71,7 @@ class Simulation:
 				x = uniform(0, self.params.WIDTH)
 				y = uniform(0, self.params.HEIGHT)
 				cell = self.floorplan.find_cell(x, y)
+				print(x, y, cell, dest)
 				age = bisect_left(self.params.POPULATION_DEMOGRAPHICS, random())
 
 				# Create agent
@@ -78,6 +79,7 @@ class Simulation:
 
 		# Create frame
 		self.frame = agents
+		# exit()
 
 	def runSimulation(self):
 		'''Run the simulation.
@@ -100,7 +102,7 @@ class Simulation:
 
 		# Reset random seed to current system time
 		# Initalize and save seed
-		startTime = curr_time()
+		startTime = datetime.now()
 		self.params.RANDOM_SEED = (
 			startTime.hour * 10000 + startTime.minute * 100 + startTime.second
 		)
@@ -139,7 +141,7 @@ class Simulation:
 		'''
 
 		# Calculate force on each agent
-		for cell_no, agents in enumerate(self.frame.agents):
+		for cell_no, agents in enumerate(self.frame):
 			for agent in agents:
 				fx, fy = self.calculateForce(agent)
 
@@ -159,6 +161,7 @@ class Simulation:
 				# Check for changes in the agent cell
 				for wall in self.floorplan.cells[agent.cell]:
 					if wall.intersects((old_pos, (agent.x, agent.y))):
+						print(agent.cell, wall.connection[wall.connection[0] == agent.cell])
 						agent.cell = wall.connection[wall.connection[0] == agent.cell]
 	
 	def calculateForce(self, agent):
@@ -192,7 +195,7 @@ class Simulation:
 				continue
 
 			per_length = sqrt(per[0] ** 2 + per[1] ** 2)
-			if per_length <= self.params.WALL_FORCE_MARGIN:
+			if per_length != 0 and per_length <= self.params.WALL_FORCE_MARGIN:
 				force_per_length = self.params.WALL_FORCE_CONSTANT / per_length ** 3
 				fx += per[0] * force_per_length
 				fy += per[1] * force_per_length
@@ -203,7 +206,7 @@ class Simulation:
 			vec = agent.vec_to_agent(other_agent)
 
 			vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
-			if vec_length < self.params.AGENT_FORCE_MARGIN:
+			if vec_length != 0 and vec_length < self.params.AGENT_FORCE_MARGIN:
 				force_per_length = self.params.AGENT_FORCE_CONSTANT / vec_length ** 3
 				fx += vec[0] * force_per_length
 				fy += vec[1] * force_per_length
@@ -228,11 +231,80 @@ class Simulation:
 					min_distance = dist
 					min_door = next_door
 
+		if min_door == None:
+			# Single cell floorplan
+			# Goal forces not applicable
+			return (fx, fy)
+
 		# Calculate attractive force from min_door
 		vec = min_door.vec_to_door((agent.x, agent.y))
 		vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
-		force_per_length = self.params.GOAL_FORCE_CONSTANT / vec_length ** 3
-		fx += vec[0] * force_per_length
-		fy += vec[1] * force_per_length
+		if vec_length != 0:
+			force_per_length = self.params.GOAL_FORCE_CONSTANT / vec_length ** 3
+			fx += vec[0] * force_per_length
+			fy += vec[1] * force_per_length
 		
 		return (fx, fy)
+
+if __name__ == '__main__':
+	from matplotlib import pyplot as plt
+	import numpy as np
+	from collections import defaultdict
+	from wall import Wall
+
+	walls = [
+		Wall(((0, 0), (50, 0)), 1, (0, 1)),
+		Wall(((50, 0), (100, 0)), 1, (0, 2)),
+		Wall(((100, 0), (100, 100)), 1, (0, 2)),
+		Wall(((100, 100), (50, 100)), 1, (0, 2)),
+		Wall(((50, 100), (0, 100)), 1, (0, 1)),
+		Wall(((0, 100), (0, 0)), 1, (0, 1)),
+		Wall(((50, 0), (50, 45)), 1, (1, 2)),
+		Wall(((50, 55), (50, 100)), 1, (1, 2)),
+		Wall(((50, 45), (50, 55)), 0, (1, 2)),
+	]
+
+	cells = defaultdict(lambda: [])
+	for wall in walls:
+		cells[wall.connection[0]].append(wall)
+		cells[wall.connection[1]].append(wall)
+
+	simulation = Simulation(
+		Params(),
+		Floorplan([cells[i] for i in range(len(cells))] , [0, 0, 100])
+	)
+
+	plt.ion()
+	fig, ax = plt.subplots()
+	
+	wall_x, wall_y = [], []
+	for wall in walls:
+		if wall.state == Wall.DOOR:
+			continue
+		points = ((wall.endpoints[0][0], wall.endpoints[1][0]), (wall.endpoints[0][1], wall.endpoints[1][1]))
+		for i in range(min(points[0]), max(points[0]) + 1):
+			for j in range(min(points[1]), max(points[1]) + 1):
+				wall_x.append(i)
+				wall_y.append(j)
+
+	sc = ax.scatter(wall_x, wall_y)
+	plt.xlim(0, 100)
+	plt.ylim(0, 100)
+
+	for agents in simulation.runSimulation():
+		for i in range(len(agents)):
+			print(f'{i}: ', end = '')
+			for agent in agents[i]:
+				print(f'({agent.x}, {agent.y}) ', end = '')
+			print()
+
+		x = [agent.x for cell_agents in agents for agent in cell_agents]
+		y = [agent.y for cell_agents in agents for agent in cell_agents]
+		x += wall_x
+		y += wall_y
+
+		sc.set_offsets(np.c_[x, y])
+		fig.canvas.draw_idle()
+		plt.pause(0.1)
+	
+	plt.waitforbuttonpress()

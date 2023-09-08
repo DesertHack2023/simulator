@@ -1,4 +1,4 @@
-from floorplan import Wall
+from wall import Wall
 from math import inf
 
 class Floorplan:
@@ -8,8 +8,6 @@ class Floorplan:
 	----------
 	num_cells: int
 		The number of cells in the simulation space
-	graph: List[List[int]]
-		The adjacency list representation of the connections between cells
 	cells: List[List[Wall]]
 		The list of walls for each cell
 	distribution: List[int]
@@ -29,13 +27,11 @@ class Floorplan:
 		Calculate the shortest path between every pair of door and cell
 	'''
 
-	def __init__(self, graph, cells, distribution):
+	def __init__(self, cells, distribution):
 		'''Initializes the floorplan and stores information
 
 		Parameters
 		----------
-		graph: List[List[int]]
-				The adjacency list representation of the connections between cells
 		cells: List[List[Wall]]
 				The list of walls for each cell polygon
 		distribution: List[int]
@@ -46,8 +42,7 @@ class Floorplan:
 		None
 		'''
 
-		self.num_cells = len(graph)
-		self.graph = graph
+		self.num_cells = len(cells)
 		self.cells = cells
 		self.distribution = distribution
 
@@ -97,18 +92,18 @@ class Floorplan:
 
 		# Compute adjacency matrix of the graph
 		num_doors = len(doors)
-		distance = [[inf] * num_doors for _ in range(num_doors)]
+		self.distances = [[inf] * num_doors for _ in range(num_doors)]
 		for u, v, w in edges:
-			distance[u][v] = w
-			distance[v][v] = w
+			self.distances[u][v] = w
+			self.distances[v][v] = w
 
 		# Flloyd-Warshall's algorithm
 		for k in range(num_doors):
 			for i in range(num_doors):
 				for j in range(num_doors):
-					distance[i][j] = min(
-						distance[i][j],
-						distance[i][k] + distance[k][j]
+					self.distances[i][j] = min(
+						self.distances[i][j],
+						self.distances[i][k] + self.distances[k][j]
 					)
 
 	def find_cell(self, x, y):
@@ -127,14 +122,16 @@ class Floorplan:
 			The cell no. that the point belongs to
 		'''
 
-		for cell_no, walls in enumerate(self.cells):
+		for cell_no in range(1, len(self.cells)):
 			# Check number of walls that intersect with the line
 			# (0, y) -> (x, y)
 			intersections = 0
-			for wall in walls:
+			for wall in self.cells[cell_no]:
 				intersections += wall.intersects(((0, y), (x, y)))
 
 			# If the num of intersections is odd, the point is inside the cell
 			if intersections % 2 == 1:
 				return cell_no
-
+		
+		# Outside all cells
+		return 0

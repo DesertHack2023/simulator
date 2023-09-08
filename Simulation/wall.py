@@ -80,11 +80,11 @@ class Wall:
 		'''
 
 		x = (b[1] - a[1]) * (c[0] - b[0]) - (b[0] - a[0]) * (c[1] - b[1])
-		if x < 0:
+		if x > 0:
 			# Clockwise
 			return 1
 
-		if x > 0:
+		if x < 0:
 			# Anti-clockwise
 			return 2
 
@@ -127,10 +127,10 @@ class Wall:
 		'''
 
 		triplets = [
-			(line[0], self.endpoints[0], line[1]),
-			(line[0], self.endpoints[0], self.endpoints[1])
-			(line[1], self.endpoints[1], line[0])
-			(line[1], self.endpoints[1], self.endpoints[0])
+			(line[0], line[1], self.endpoints[0]),
+			(line[0], line[1], self.endpoints[1]),
+			(self.endpoints[0], self.endpoints[1], line[0]),
+			(self.endpoints[0], self.endpoints[1], line[1])
 		]
 
 		orientations = [self.orientation(*i) for i in triplets]
@@ -194,7 +194,7 @@ class Wall:
 		)
 
 		# Return the vector between these two points
-		return sqrt(
+		return (
 			(self_center[0] - point[0]),
 			(self_center[1] - point[1])
 		)
@@ -205,7 +205,7 @@ class Wall:
 		If the foot of the perpendicular doesn't lie on the line segment, we return (inf, inf)
 
 		Parameters
-		----------
+		---------, (x, y)-
 		point: Tuple[float, float]
 			The point from which we are measuring
 
@@ -223,8 +223,8 @@ class Wall:
 		# i.e if the p = a - b and q = (c - b) / |c - b|
 		# then a - d = p - (p.q)q
 
-		p = (point[0] - self.endpoints[0], point[0] - self.endpoints[0])
-		q = (self.endpoints[1] - self.endpoints[0], self.endpoints[1] - self.endpoints[0])
+		p = (point[0] - self.endpoints[0][0], point[1] - self.endpoints[0][1])
+		q = (self.endpoints[1][0] - self.endpoints[0][0], self.endpoints[1][1] - self.endpoints[0][1])
 		q_len = sqrt(q[0] ** 2 + q[1] ** 2)
 
 		# Check if 0 <= k <= 1 (foot of perpendicular lies on the line segment)
