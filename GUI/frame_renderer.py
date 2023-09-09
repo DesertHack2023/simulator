@@ -1,8 +1,8 @@
-from dataclasses import dataclass, field
-from math import sqrt
 import logging
 
 import dearpygui.dearpygui as dpg
+
+from .boidsimulator import Agent, Edge, Simulation, distance
 
 logger = logging.getLogger("GUI.FrameRenderer")
 
@@ -11,55 +11,32 @@ THICKNESS = 3
 SNAP_DISTANCE = 25
 
 
-def distance(p1: tuple[float, float], p2: tuple[float, float]):
-    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
-
-
-@dataclass
-class Edge:
-    p1: tuple[float, float]
-    p2: tuple[float, float]
-    edge_type: int = 0
-    length: float = 0
-    unit_vector: tuple[float, float] = field(init=False)
-
-    def __post_init__(self):
-        vector = [self.p2[0] - self.p1[0], self.p2[1] - self.p1[1]]
-        magnitude = sqrt(vector[0] ** 2 + vector[1] ** 2)
-        self.unit_vector = tuple(i / magnitude for i in vector)
-        self.length = distance(self.p1, self.p2)
-
-    def draw(self, parent):
-        dpg.draw_line(
-            self.p1, self.p2, color=COLOUR, thickness=THICKNESS, parent=parent
-        )
-        # logger.debug("Drew line")
-
-    def foot_of_the_perpendicular(self, point: tuple[float, float]):
-        dot = (point[0] - self.p1[0]) * self.unit_vector[0] + (
-            point[1] - self.p1[1]
-        ) * self.unit_vector[1]
-        if dot >= 0 and dot < self.length:
-            return (
-                self.p1[0] + dot * self.unit_vector[0],
-                self.p1[1] + dot * self.unit_vector[1],
-            )
-
-
-class Frame:
+class Canvas:
     """This is meant to draw the contents of a frame"""
 
     def __init__(self, parent, edges: list[Edge]):
         self.parent = parent
         self.edges = edges
+        boids = list(Agent([100, 100], [1, 2]) for _ in range(25))
+        self.sim = Simulation(boids)
         logger.debug(edges)
         self._render()
         logger.debug("rendered map")
 
+    @staticmethod
+    def draw(edge: Edge, parent):
+        dpg.draw_line(
+            edge.p1, edge.p2, color=COLOUR, thickness=THICKNESS, parent=parent
+        )
+        # logger.debug("Drew line")
+
     def _render(self):
+        dpg.add_button(
+            label="Boid Sim", parent=self.parent, callback=self.run_simulation
+        )
         with dpg.drawlist(600, 450, parent=self.parent) as self.drawlist:
             for edge in self.edges:
-                edge.draw(self.drawlist)
+                self.draw(edge, self.drawlist)
             with dpg.item_handler_registry() as registry:
                 dpg.add_item_clicked_handler(
                     button=dpg.mvMouseButton_Left, callback=self._draw
@@ -109,3 +86,14 @@ class Frame:
             edge = Edge((x, y), (new_x, new_y))
             self.edges.append(edge)
         # logger.debug(self.edges)
+
+    def run_simulation(self):
+        boid_ids = []
+        for boid in self.sim.boids:
+            i = dpg.draw_circle(
+                boid.position, radius=5, color=(255, 0, 0, 25), parent=self.drawlist
+            )
+            boid_ids.append(i)
+        for frame in self.sim.run():
+            for x, boid in enumerate(frame):
+                dpg.configure_item(boid_ids[x], center=boid.position)

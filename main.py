@@ -44,7 +44,7 @@ def main():
                 with dpg.child_window() as no_idea:
                     dpg.add_text("IDK the behaviour or something", parent=no_idea)
                 with dpg.child_window() as frame:
-                    GUI.Frame(parent=frame, edges=[])
+                    GUI.Canvas(parent=frame, edges=[])
 
     dpg.setup_dearpygui()
     dpg.set_primary_window("Primary Window", True)
