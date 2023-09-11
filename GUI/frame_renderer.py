@@ -1,8 +1,9 @@
 import logging
+import time
 
 import dearpygui.dearpygui as dpg
 
-from .boidsimulator import Agent, Edge, Simulation, distance
+from .boidsimulator import Agent, Edge, Simulation, distance, test_boids
 
 logger = logging.getLogger("GUI.FrameRenderer")
 
@@ -17,7 +18,7 @@ class Canvas:
     def __init__(self, parent, edges: list[Edge]):
         self.parent = parent
         self.edges = edges
-        boids = list(Agent([100, 100], [1, 2]) for _ in range(25))
+        boids = test_boids()
         self.sim = Simulation(boids)
         logger.debug(edges)
         self._render()
@@ -91,9 +92,16 @@ class Canvas:
         boid_ids = []
         for boid in self.sim.boids:
             i = dpg.draw_circle(
-                boid.position, radius=5, color=(255, 0, 0, 25), parent=self.drawlist
+                boid.position,
+                radius=3,
+                color=(255, 0, 0, 25),
+                parent=self.drawlist,
+                thickness=THICKNESS,
             )
             boid_ids.append(i)
+        logger.debug("drew boids")
         for frame in self.sim.run():
+            logger.debug("drawing frame")
+            time.sleep(0.125)
             for x, boid in enumerate(frame):
                 dpg.configure_item(boid_ids[x], center=boid.position)

@@ -48,6 +48,10 @@ class Simulation:
         self.centre_of_mass_tendency = 0.01
         self.repulsion_radius = 10
         self.fomo_factor = 0.125
+        self.x_max = 200
+        self.x_min = 0
+        self.y_max = 200
+        self.y_min = 0
 
     def com_vector(self, boid: Agent):
         num_boids = len(self.boids)
@@ -80,15 +84,29 @@ class Simulation:
         y = (perceived_velocity[1] - boid.velocity[1]) * self.fomo_factor
         return x, y
 
+    def bound_position(self, boid: Agent):
+        vector = [0, 0]
+        if boid.position[0] < self.x_min:
+            vector[0] = 10
+        elif boid.position[0] > self.x_max:
+            vector[0] = -10
+
+        if boid.position[1] < self.y_min:
+            vector[1] = 10
+        elif boid.position[0] > self.y_max:
+            vector[1] = -10
+        return vector
+
     def next_frame(self):
         logger.debug("Calculating frame...")
         for boid in self.boids:
             v1 = self.com_vector(boid)
             v2 = self.repulsion_vector(boid)
             v3 = self.fomo_vector(boid)
+            v4 = self.bound_position(boid)
 
-            boid.velocity[0] += v1[0] + v2[0] + v3[0]
-            boid.velocity[1] += v1[1] + v2[1] + v3[1]
+            boid.velocity[0] += v1[0] + v2[0] + v3[0] + v4[0]
+            boid.velocity[1] += v1[1] + v2[1] + v3[1] + v4[1]
 
             boid.position[0] += boid.velocity[0]
             boid.position[1] += boid.velocity[1]
@@ -98,6 +116,20 @@ class Simulation:
         while True:
             self.next_frame()
             yield self.boids
+
+
+def test_boids():
+    import itertools
+    import random
+
+    random_positions = list(
+        [random.randrange(0, 100), random.randrange(0, 100)] for _ in range(50)
+    )
+    random_velocities = list([random.random(), random.random()] for _ in range(50))
+    return [
+        Agent(p, v)
+        for p, v in itertools.zip_longest(random_positions, random_velocities)
+    ]
 
 
 if __name__ == "__main__":
