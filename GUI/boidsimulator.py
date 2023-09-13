@@ -16,6 +16,15 @@ class Agent:
     position: list[float]
     velocity: list[float]
 
+    @property
+    def velocity_vector(self):
+        return [
+            self.position[i] + self.velocity[i] * 3 / self.speed() for i in range(2)
+        ]
+
+    def speed(self):
+        return sqrt(sum(i**2 for i in self.velocity))
+
 
 @dataclass
 class Edge:
@@ -46,12 +55,13 @@ class Simulation:
     def __init__(self, initial_boids: list[Agent]):
         self.boids = initial_boids
         self.centre_of_mass_tendency = 0.01
-        self.repulsion_radius = 10
+        self.repulsion_radius = 2
         self.fomo_factor = 0.125
-        self.x_max = 200
-        self.x_min = 0
-        self.y_max = 200
-        self.y_min = 0
+        self.v_lim = 2
+        self.x_max = 600
+        self.x_min = 100
+        self.y_max = 300
+        self.y_min = 100
 
     def com_vector(self, boid: Agent):
         num_boids = len(self.boids)
@@ -84,6 +94,12 @@ class Simulation:
         y = (perceived_velocity[1] - boid.velocity[1]) * self.fomo_factor
         return x, y
 
+    def limit_velocity(self, boid: Agent):
+        speed = boid.speed()
+        if speed > self.v_lim:
+            boid.velocity[0] = boid.velocity[0] / speed * self.v_lim
+            boid.velocity[1] = boid.velocity[1] / speed * self.v_lim
+
     def bound_position(self, boid: Agent):
         vector = [0, 0]
         if boid.position[0] < self.x_min:
@@ -107,6 +123,7 @@ class Simulation:
 
             boid.velocity[0] += v1[0] + v2[0] + v3[0] + v4[0]
             boid.velocity[1] += v1[1] + v2[1] + v3[1] + v4[1]
+            self.limit_velocity(boid)
 
             boid.position[0] += boid.velocity[0]
             boid.position[1] += boid.velocity[1]
@@ -123,9 +140,9 @@ def test_boids():
     import random
 
     random_positions = list(
-        [random.randrange(0, 100), random.randrange(0, 100)] for _ in range(50)
+        [random.random() * 100 + 100, random.random() * 100 + 100] for _ in range(100)
     )
-    random_velocities = list([random.random(), random.random()] for _ in range(50))
+    random_velocities = list([random.random(), random.random()] for _ in range(100))
     return [
         Agent(p, v)
         for p, v in itertools.zip_longest(random_positions, random_velocities)
@@ -135,7 +152,7 @@ def test_boids():
 if __name__ == "__main__":
     import time
 
-    boids = list(Agent([100, 100], [0, 0]) for i in range(25))
+    boids = list(Agent([100, 100], [0, 0]) for _ in range(25))
     sim = Simulation(boids)
     for frame in sim.run():
         time.sleep(1)

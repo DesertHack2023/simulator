@@ -299,11 +299,11 @@ if __name__ == "__main__":
     plt.ylim(0, 100)
 
     for agents in simulation.runSimulation():
-        for i in range(len(agents)):
-            print(f"{i}: ", end="")
-            for agent in agents[i]:
-                print(f"({agent.x}, {agent.y}) ", end="")
-            print()
+        # for i in range(len(agents)):
+        # print(f"{i}: ", end="")
+        # for agent in agents[i]:
+        #     print(f"({agent.x}, {agent.y}) ", end="")
+        # print()
 
         x = [agent.x for cell_agents in agents for agent in cell_agents]
         y = [agent.y for cell_agents in agents for agent in cell_agents]
