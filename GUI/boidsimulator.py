@@ -1,8 +1,26 @@
 import logging
-from dataclasses import dataclass, field
+from collections import namedtuple
+from dataclasses import astuple, dataclass, field
 from math import sqrt
 
+import jax.numpy as np
+import numpy as onp
+from jax import Array, jit, lax, random, vmap
+
+vectorize = np.vectorize
+
+import base64
+from functools import partial
+
+from jax_md import energy, minimize, partition, quantity, simulate, smap, space, util
+from jax_md.util import f32
+
 logger = logging.getLogger("GUI.boids")
+
+
+@vmap
+def normal(theta):
+    return np.array([np.cos(theta), np.sin(theta)])
 
 
 def distance(
@@ -11,19 +29,14 @@ def distance(
     return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
 
-@dataclass
-class Agent:
-    position: list[float]
-    velocity: list[float]
+Agents = namedtuple("Agents", ["agent_array", "agent_theta"])
 
-    @property
-    def velocity_vector(self):
-        return [
-            self.position[i] + self.velocity[i] * 3 / self.speed() for i in range(2)
-        ]
 
-    def speed(self):
-        return sqrt(sum(i**2 for i in self.velocity))
+def iter_agents(agents: Agents):
+    agent_array, agent_theta = agents
+    normals = normal(agent_theta)
+    for position, p2 in zip(agent_array, normals):
+        yield tuple(position), tuple(position + p2)
 
 
 @dataclass
@@ -52,110 +65,103 @@ class Edge:
 
 
 class Simulation:
-    def __init__(self, initial_boids: list[Agent]):
+    def __init__(self, initial_boids: Agents, box_size=800.0):
         self.boids = initial_boids
-        self.centre_of_mass_tendency = 0.01
-        self.repulsion_radius = 2
-        self.fomo_factor = 0.125
-        self.v_lim = 2
-        self.x_max = 600
-        self.x_min = 100
-        self.y_max = 300
-        self.y_min = 100
+        self.update = self.dynamics(energy_fn=self.energy_fn(), dt=1e-1, speed=1.0)
+        self.state = {"boids": self.boids}
+        for x, y in zip(self.boids.agent_theta, self.boids.agent_array):
+            logger.debug((x, y))
+        self.displacement, self.shift = space.periodic(side=box_size)
 
-    def com_vector(self, boid: Agent):
-        num_boids = len(self.boids)
-        perceived_centre = (
-            sum(boid.position[0] for i in self.boids if i != boid) / (num_boids - 1),
-            sum(boid.position[1] for i in self.boids if i != boid) / (num_boids - 1),
-        )
-        x = (perceived_centre[0] - boid.position[0]) * self.centre_of_mass_tendency
-        y = (perceived_centre[1] - boid.position[1]) * self.centre_of_mass_tendency
-        return x, y
+    def energy_fn(self):
+        @jit
+        def func(state):
+            boids = state["boids"]
+            E_align = partial(self.align_fn, J_align=0.5, D_align=45.0, alpha=3.0)
+            # Map the align energy over all pairs of boids. While both applications
+            # of vmap map over the displacement matrix, each acts on only one normal.
+            E_align = vmap(vmap(E_align, (0, None, 0)), (0, 0, None))
 
-    def repulsion_vector(self, boid: Agent):
-        c_x = 0
-        c_y = 0
-        for b in self.boids:
-            if b != boid:
-                if distance(b.position, boid.position) < self.repulsion_radius:
-                    c_x -= b.position[0] - boid.position[0]
-                    c_y -= b.position[1] - boid.position[1]
-        return c_x, c_y
+            E_avoid = partial(self.avoid_fn, J_avoid=25.0, D_avoid=30.0, alpha=3.0)
+            E_avoid = vmap(vmap(E_avoid))
 
-    def fomo_vector(self, boid: Agent):
-        # Boids try to match veloocity with nearby boids
-        num_boids = len(self.boids)
-        perceived_velocity = (
-            sum(boid.velocity[0] for i in self.boids if i != boid) / (num_boids - 1),
-            sum(boid.velocity[1] for i in self.boids if i != boid) / (num_boids - 1),
-        )
-        x = (perceived_velocity[0] - boid.velocity[0]) * self.fomo_factor
-        y = (perceived_velocity[1] - boid.velocity[1]) * self.fomo_factor
-        return x, y
+            E_cohesion = partial(self.cohesion_fn, J_cohesion=0.001, D_cohesion=10.0)
 
-    def limit_velocity(self, boid: Agent):
-        speed = boid.speed()
-        if speed > self.v_lim:
-            boid.velocity[0] = boid.velocity[0] / speed * self.v_lim
-            boid.velocity[1] = boid.velocity[1] / speed * self.v_lim
+            dR = space.map_product(self.displacement)(
+                boids.agent_array, boids.agent_array
+            )
+            N = normal(boids.agent_theta)
+            return 0.5 * np.sum(E_align(dR, N, N) + E_avoid(dR) + E_cohesion(dR, N))
 
-    def bound_position(self, boid: Agent):
-        vector = [0, 0]
-        if boid.position[0] < self.x_min:
-            vector[0] = 10
-        elif boid.position[0] > self.x_max:
-            vector[0] = -10
+        return func
 
-        if boid.position[1] < self.y_min:
-            vector[1] = 10
-        elif boid.position[0] > self.y_max:
-            vector[1] = -10
-        return vector
+    @staticmethod
+    def align_fn(dR, N_1, N_2, J_align, D_align, alpha):
+        dR = lax.stop_gradient(dR)
+        dr = space.distance(dR) / D_align
+        energy = J_align / alpha * (1.0 - dr) ** alpha * (1 - np.dot(N_1, N_2)) ** 2
+        return np.where(dr < 1.0, energy, 0.0)
 
-    def next_frame(self):
-        logger.debug("Calculating frame...")
-        for boid in self.boids:
-            v1 = self.com_vector(boid)
-            v2 = self.repulsion_vector(boid)
-            v3 = self.fomo_vector(boid)
-            v4 = self.bound_position(boid)
+    @staticmethod
+    def avoid_fn(dR, J_avoid, D_avoid, alpha):
+        dr = space.distance(dR) / D_avoid
+        return np.where(dr < 1.0, J_avoid / alpha * (1 - dr) ** alpha, 0.0)
 
-            boid.velocity[0] += v1[0] + v2[0] + v3[0] + v4[0]
-            boid.velocity[1] += v1[1] + v2[1] + v3[1] + v4[1]
-            self.limit_velocity(boid)
+    @staticmethod
+    def cohesion_fn(dR, N, J_cohesion, D_cohesion, eps=1e-7):
+        dR = lax.stop_gradient(dR)
+        dr = np.linalg.norm(dR, axis=-1, keepdims=True)
 
-            boid.position[0] += boid.velocity[0]
-            boid.position[1] += boid.velocity[1]
+        mask = dr < D_cohesion
+
+        N_com = np.where(mask, 1.0, 0)
+        dR_com = np.where(mask, dR, 0)
+        dR_com = np.sum(dR_com, axis=1) / (np.sum(N_com, axis=1) + eps)
+        dR_com = dR_com / np.linalg.norm(dR_com + eps, axis=1, keepdims=True)
+        return f32(0.5) * J_cohesion * (1 - np.sum(dR_com * N, axis=1)) ** 2
+
+    def dynamics(self, energy_fn, dt, speed):
+        @jit
+        def update(_, state):
+            R, theta = state["boids"]
+
+            dstate = quantity.force(energy_fn)(state)
+            dR, dtheta = dstate["boids"]
+            n = normal(state["boids"].agent_theta)
+
+            state["boids"] = Agents(
+                self.shift(R, dt * (speed * n + dR)), theta + (dt * dtheta)
+            )
+            return state
+
+        return update
 
     def run(self):
-        # figure out a clean cancel mechanism later, ctrl-C for now
         while True:
-            self.next_frame()
-            yield self.boids
+            # infinite simulation
+            self.state = lax.fori_loop(
+                1, 50, self.update, self.state
+            )  # 50 changes to the state, for each frame
+            yield self.state
 
 
-def test_boids():
-    import itertools
-    import random
+def test_boids() -> Agents:
+    boid_count = 200
+    dim = 2  # simulation is in 2D
+    edge_length = 800
 
-    random_positions = list(
-        [random.random() * 100 + 100, random.random() * 100 + 100] for _ in range(100)
+    # Create RNG state to draw random numbers (see LINK).
+    rng = random.PRNGKey(0)
+
+    # Initialize the boids.
+    rng, R_rng, theta_rng = random.split(rng, 3)
+
+    boids = Agents(
+        agent_array=edge_length * random.uniform(R_rng, (boid_count, dim)),
+        agent_theta=random.uniform(theta_rng, (boid_count,), maxval=2.0 * np.pi),
     )
-    random_velocities = list([random.random(), random.random()] for _ in range(100))
-    return [
-        Agent(p, v)
-        for p, v in itertools.zip_longest(random_positions, random_velocities)
-    ]
+    return boids
 
 
 if __name__ == "__main__":
-    import time
-
-    boids = list(Agent([100, 100], [0, 0]) for _ in range(25))
-    sim = Simulation(boids)
-    for frame in sim.run():
-        time.sleep(1)
-        for boid in frame:
-            print(boid)
-        print("-" * 30)
+    boids = test_boids()

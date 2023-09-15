@@ -3,7 +3,7 @@ import time
 
 import dearpygui.dearpygui as dpg
 
-from .boidsimulator import Edge, Simulation, distance, test_boids
+from .boidsimulator import Edge, Simulation, distance, iter_agents, test_boids
 
 logger = logging.getLogger("GUI.FrameRenderer")
 
@@ -87,20 +87,21 @@ class Canvas:
 
     def run_simulation(self):
         boid_ids = []
-        for boid in self.sim.boids:
+        for boid in iter_agents(self.sim.boids):
+            position, arrow_head = boid
             i = dpg.draw_arrow(
-                p2=boid.position,
-                p1=boid.velocity_vector,
+                p2=position,
+                p1=arrow_head,
                 color=(255, 0, 0, 255),
                 parent=self.plot,
                 thickness=THICKNESS,
             )
             boid_ids.append(i)
-        logger.debug("drew boids")
-        for frame in self.sim.run():
-            logger.debug("drawing frame")
+        for state in self.sim.run():
             # time.sleep(0.125)
-            for x, boid in enumerate(frame):
-                dpg.configure_item(
-                    boid_ids[x], p2=boid.position, p1=boid.velocity_vector
-                )
+            boids = state["boids"]
+            c = 0
+            for boid in iter_agents(boids):
+                position, arrow_head = boid
+                dpg.configure_item(boid_ids[c], p2=position, p1=arrow_head)
+                c += 1
