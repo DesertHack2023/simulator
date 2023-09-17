@@ -99,7 +99,7 @@ class Canvas:
             boid_ids.append(i)
 
         for agents in self.sim.run():
-            # time.sleep(0.125)
+            # time.sleep(0.06)
             c = 0
             for boid in agents.iter_agents():
                 position, velocity = boid
