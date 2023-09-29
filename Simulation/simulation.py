@@ -199,7 +199,7 @@ class Simulation:
 
             per_length = sqrt(per[0] ** 2 + per[1] ** 2)
             if per_length != 0 and per_length <= self.params.WALL_FORCE_MARGIN:
-                force_per_length = self.params.WALL_FORCE_CONSTANT / per_length**3
+                force_per_length = self.params.WALL_FORCE_CONSTANT / per_length
                 fx += per[0] * force_per_length
                 fy += per[1] * force_per_length
 

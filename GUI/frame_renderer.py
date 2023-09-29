@@ -1,9 +1,11 @@
 import logging
-import time
+import threading
+from dataclasses import dataclass, field
+from math import sqrt
 
 import dearpygui.dearpygui as dpg
 
-from .boidsimulator import Agents, Edge, Simulation, distance
+from .boidsimulator import Agents, Params, Simulation, distance
 
 logger = logging.getLogger("GUI.FrameRenderer")
 
@@ -12,14 +14,41 @@ THICKNESS = 3
 SNAP_DISTANCE = 25
 
 
+@dataclass
+class Edge:
+    p1: tuple[float, float]
+    p2: tuple[float, float]
+    edge_type: int = 0
+    length: float = 0
+    unit_vector: tuple[float, float] = field(init=False)
+
+    def __post_init__(self):
+        vector = [self.p2[0] - self.p1[0], self.p2[1] - self.p1[1]]
+        magnitude = sqrt(vector[0] ** 2 + vector[1] ** 2)
+        self.unit_vector = tuple(i / magnitude for i in vector)
+        self.length = distance(self.p1, self.p2)
+
+    def foot_of_the_perpendicular(self, point: tuple[float, float]):
+        dot = (point[0] - self.p1[0]) * self.unit_vector[0] + (
+            point[1] - self.p1[1]
+        ) * self.unit_vector[1]
+        if dot >= 0 and dot < self.length:
+            return (
+                self.p1[0] + dot * self.unit_vector[0],
+                self.p1[1] + dot * self.unit_vector[1],
+            )
+
+
 class Canvas:
     """This is meant to draw the contents of a frame"""
 
     def __init__(self, parent, edges: list[Edge]):
         self.parent = parent
         self.edges = edges
-        boids = Agents.random_from_seed(2023)
-        self.sim = Simulation(boids)
+        agents = Agents.random_from_seed(2023)
+        params = Params()
+        self.sim = Simulation(agents, params)
+        self.agent_ids = []
 
         logger.debug(edges)
         self._render()
@@ -27,7 +56,7 @@ class Canvas:
 
     def _render(self):
         dpg.add_button(
-            label="Boid Sim", parent=self.parent, callback=self.run_simulation
+            label="Boid Sim", parent=self.parent, callback=self.start_simulation_task
         )
         with dpg.child_window(
             autosize_x=True, autosize_y=True, parent=self.parent
@@ -63,7 +92,7 @@ class Canvas:
         line = None
         while dpg.is_mouse_button_down(button=dpg.mvMouseButton_Middle):
             new_x, new_y = dpg.get_plot_mouse_pos()
-            logger.debug([x, y, new_x, new_y])
+            # logger.debug([x, y, new_x, new_y])
             suggestion = self._suggestion((new_x, new_y))
             if suggestion:
                 new_x, new_y = suggestion
@@ -84,10 +113,17 @@ class Canvas:
             self.edges.append(edge)
         # logger.debug(self.edges)
 
+    def start_simulation_task(self):
+        thread = threading.Thread(target=self.run_simulation, args=(), daemon=True)
+        thread.start()
+
     def run_simulation(self):
-        boid_ids = []
-        for boid in self.sim.agents.iter_agents():
-            position, velocity = boid
+        for agent in self.agent_ids:
+            dpg.delete_item(agent)
+        self.agent_ids.clear()
+
+        for agent in self.sim.agents.iter_agents():
+            position, velocity = agent
             arrow_head = position + velocity
             i = dpg.draw_arrow(
                 p2=position,
@@ -96,12 +132,14 @@ class Canvas:
                 parent=self.plot,
                 thickness=THICKNESS,
             )
-            boid_ids.append(i)
+            self.agent_ids.append(i)
 
-        for agents in self.sim.run():
+        for agent in self.sim.run():
             # time.sleep(0.06)
             c = 0
-            for boid in agents.iter_agents():
-                position, velocity = boid
-                dpg.configure_item(boid_ids[c], p2=position, p1=position + velocity)
+            for agent in agent.iter_agents():
+                position, velocity = agent
+                dpg.configure_item(
+                    self.agent_ids[c], p2=position, p1=position + velocity
+                )
                 c += 1
