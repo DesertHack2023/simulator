@@ -18,9 +18,10 @@ class ParameterSelector:
 
     def get_params(self):
         # this is meant to return a parameter object to be used by the simulator
-        return
+        return self.params
 
     def _render(self):
+        # TODO: Bind the values entered by the user to those in the Params object
         logger.debug("Rendering ParameterSelector")
         for field in fields(self.params):
             logger.debug(field)

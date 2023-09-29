@@ -51,9 +51,12 @@ class Edge:
 class Canvas:
     """This is meant to draw the contents of a frame"""
 
-    def __init__(self, parent, edges: list[Edge]):
+    def __init__(
+        self, parent, edges: list[Edge], parameter_selector: ParameterSelector
+    ):
         self.parent = parent
         self.edges = edges
+        self.parameter_selector = parameter_selector
         self.agent_ids = []
 
         logger.debug(edges)
@@ -121,17 +124,14 @@ class Canvas:
 
     def start_simulation(self):
         # TODO: This function should create a parameter selector prompt
-        with dpg.window() as parent:
-            param_selector = ParameterSelector(parent, Simulation.Params)
-        params = param_selector.get_params()
-
+        params = self.parameter_selector.get_params()
         floorplan = Simulation.Floorplan.make_default_layout()
 
         sim = Simulation.Simulation(params, floorplan)
         task = partial(self.run_simulation, sim)
         thread = threading.Thread(target=task, args=(), daemon=True)
+
         thread.start()
-        # TODO: close the parameter selector and all that over here
 
     def run_simulation(self, sim):
         for agent in self.agent_ids:

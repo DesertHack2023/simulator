@@ -69,11 +69,13 @@ class Simulation:
         agents = [[] for _ in range(self.floorplan.num_cells)]
         for dest, num_agents in enumerate(self.floorplan.distribution):
             for _ in range(num_agents):
-                x = uniform(0, self.params.WIDTH)
-                y = uniform(0, self.params.HEIGHT)
+                x = uniform(0, self.params.basic_parameters.WIDTH)
+                y = uniform(0, self.params.basic_parameters.HEIGHT)
                 cell = self.floorplan.find_cell(x, y)
                 print(x, y, cell, dest)
-                age = bisect_left(self.params.POPULATION_DEMOGRAPHICS, random())
+                age = bisect_left(
+                    self.params.basic_parameters.POPULATION_DEMOGRAPHICS, random()
+                )
 
                 # Create agent
                 agents[cell].append(Agent(cell, x, y, age, dest))
@@ -104,15 +106,15 @@ class Simulation:
         # Reset random seed to current system time
         # Initalize and save seed
         startTime = datetime.now()
-        self.params.RANDOM_SEED = (
+        self.params.basic_parameters.RANDOM_SEED = (
             startTime.hour * 10000 + startTime.minute * 100 + startTime.second
         )
-        seed(self.params.RANDOM_SEED)
+        seed(self.params.basic_parameters.RANDOM_SEED)
 
         # Yield the first frame
         yield self.frame
 
-        for _ in range(self.params.SIMULATION_LENGTH):
+        for _ in range(self.params.basic_parameters.SIMULATION_LENGTH):
             # Calculate the next frame and then yield it
             self.nextFrame()
             yield self.frame
@@ -149,9 +151,9 @@ class Simulation:
                 agent.vx += fx
                 agent.vy += fy
                 v = sqrt(agent.vx**2 + agent.vy**2)
-                if v > self.params.MAX_VELOCITY:
-                    agent.vx *= self.params.MAX_VELOCITY / v
-                    agent.vy *= self.params.MAX_VELOCITY / v
+                if v > self.params.basic_parameters.MAX_VELOCITY:
+                    agent.vx *= self.params.basic_parameters.MAX_VELOCITY / v
+                    agent.vy *= self.params.basic_parameters.MAX_VELOCITY / v
 
                 # Update position
                 old_pos = (agent.x, agent.y)
@@ -198,8 +200,13 @@ class Simulation:
                 continue
 
             per_length = sqrt(per[0] ** 2 + per[1] ** 2)
-            if per_length != 0 and per_length <= self.params.WALL_FORCE_MARGIN:
-                force_per_length = self.params.WALL_FORCE_CONSTANT / per_length
+            if (
+                per_length != 0
+                and per_length <= self.params.repulsion_factors.WALL_FORCE_MARGIN
+            ):
+                force_per_length = (
+                    self.params.repulsion_factors.WALL_FORCE_CONSTANT / per_length
+                )
                 fx += per[0] * force_per_length
                 fy += per[1] * force_per_length
 
@@ -209,8 +216,13 @@ class Simulation:
             vec = agent.vec_to_agent(other_agent)
 
             vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
-            if vec_length != 0 and vec_length < self.params.AGENT_FORCE_MARGIN:
-                force_per_length = self.params.AGENT_FORCE_CONSTANT / vec_length**3
+            if (
+                vec_length != 0
+                and vec_length < self.params.repulsion_factors.AGENT_FORCE_MARGIN
+            ):
+                force_per_length = (
+                    self.params.repulsion_factors.AGENT_FORCE_CONSTANT / vec_length**3
+                )
                 fx += vec[0] * force_per_length
                 fy += vec[1] * force_per_length
 
@@ -243,7 +255,9 @@ class Simulation:
         vec = min_door.vec_to_door((agent.x, agent.y))
         vec_length = sqrt(vec[0] ** 2 + vec[1] ** 2)
         if vec_length != 0:
-            force_per_length = self.params.GOAL_FORCE_CONSTANT / vec_length**3
+            force_per_length = (
+                self.params.repulsion_factors.GOAL_FORCE_CONSTANT / vec_length**3
+            )
             fx += vec[0] * force_per_length
             fy += vec[1] * force_per_length
 
