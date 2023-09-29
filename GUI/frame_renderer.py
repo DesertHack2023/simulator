@@ -1,17 +1,26 @@
 import logging
 import threading
 from dataclasses import dataclass, field
+from functools import partial
 from math import sqrt
 
 import dearpygui.dearpygui as dpg
 
-from .boidsimulator import Agents, Params, Simulation, distance
+import Simulation
+
+from .params import ParameterSelector
 
 logger = logging.getLogger("GUI.FrameRenderer")
 
 COLOUR = (255, 255, 255, 255)
 THICKNESS = 3
 SNAP_DISTANCE = 25
+
+
+def distance(
+    p1: tuple[float, float] | list[float], p2: tuple[float, float] | list[float]
+):
+    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
 
 
 @dataclass
@@ -45,9 +54,6 @@ class Canvas:
     def __init__(self, parent, edges: list[Edge]):
         self.parent = parent
         self.edges = edges
-        agents = Agents.random_from_seed(2023)
-        params = Params()
-        self.sim = Simulation(agents, params)
         self.agent_ids = []
 
         logger.debug(edges)
@@ -56,7 +62,7 @@ class Canvas:
 
     def _render(self):
         dpg.add_button(
-            label="Boid Sim", parent=self.parent, callback=self.start_simulation_task
+            label="Boid Sim", parent=self.parent, callback=self.start_simulation
         )
         with dpg.child_window(
             autosize_x=True, autosize_y=True, parent=self.parent
@@ -113,16 +119,26 @@ class Canvas:
             self.edges.append(edge)
         # logger.debug(self.edges)
 
-    def start_simulation_task(self):
-        thread = threading.Thread(target=self.run_simulation, args=(), daemon=True)
-        thread.start()
+    def start_simulation(self):
+        # TODO: This function should create a parameter selector prompt
+        with dpg.window() as parent:
+            param_selector = ParameterSelector(parent, Simulation.Params)
+        params = param_selector.get_params()
 
-    def run_simulation(self):
+        floorplan = Simulation.Floorplan.make_default_layout()
+
+        sim = Simulation.Simulation(params, floorplan)
+        task = partial(self.run_simulation, sim)
+        thread = threading.Thread(target=task, args=(), daemon=True)
+        thread.start()
+        # TODO: close the parameter selector and all that over here
+
+    def run_simulation(self, sim):
         for agent in self.agent_ids:
             dpg.delete_item(agent)
         self.agent_ids.clear()
 
-        for agent in self.sim.agents.iter_agents():
+        for agent in sim.agents.iter_agents():
             position, velocity = agent
             arrow_head = position + velocity
             i = dpg.draw_arrow(
@@ -134,7 +150,7 @@ class Canvas:
             )
             self.agent_ids.append(i)
 
-        for agent in self.sim.run():
+        for agent in sim.run():
             # time.sleep(0.06)
             c = 0
             for agent in agent.iter_agents():
@@ -142,4 +158,4 @@ class Canvas:
                 dpg.configure_item(
                     self.agent_ids[c], p2=position, p1=position + velocity
                 )
-                c += 1
+            c += 1

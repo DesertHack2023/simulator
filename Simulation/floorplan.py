@@ -1,6 +1,7 @@
+from collections import defaultdict
 from math import inf
 
-from wall import Wall
+from .wall import Wall
 
 
 class Floorplan:
@@ -149,3 +150,24 @@ class Floorplan:
 
         # Outside all cells
         return 0
+
+    @classmethod
+    def make_default_layout(cls):
+        walls = [
+            Wall(((0, 0), (50, 0)), 1, (0, 1)),
+            Wall(((50, 0), (100, 0)), 1, (0, 2)),
+            Wall(((100, 0), (100, 100)), 1, (0, 2)),
+            Wall(((100, 100), (50, 100)), 1, (0, 2)),
+            Wall(((50, 100), (0, 100)), 1, (0, 1)),
+            Wall(((0, 100), (0, 0)), 1, (0, 1)),
+            Wall(((50, 0), (50, 45)), 1, (1, 2)),
+            Wall(((50, 55), (50, 100)), 1, (1, 2)),
+            Wall(((50, 45), (50, 55)), 0, (1, 2)),
+        ]
+
+        cells = defaultdict(lambda: [])
+        for wall in walls:
+            cells[wall.connection[0]].append(wall)
+            cells[wall.connection[1]].append(wall)
+
+        return cls([cells[i] for i in range(len(cells))], [0, 0, 100])

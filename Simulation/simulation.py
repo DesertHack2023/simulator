@@ -3,9 +3,9 @@ from datetime import datetime
 from math import inf, sqrt
 from random import random, seed, uniform
 
-from agent import Agent
-from floorplan import Floorplan
-from params import Params
+from .agent import Agent
+from .floorplan import Floorplan
+from .params import Params
 
 
 class Simulation:

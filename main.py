@@ -32,8 +32,6 @@ def main():
                 log.setFormatter(formatter)
                 TimelapseLogger.addHandler(log)
                 GUI_Logger.addHandler(log)
-            with dpg.window(height=350, width=350, label="Parameters") as parameters:
-                GUI.ParameterSelector(parent=parameters)
             with dpg.window(height=500, width=500, label="Canvas") as frame:
                 GUI.Canvas(parent=frame, edges=[])
 

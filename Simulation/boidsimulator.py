@@ -1,7 +1,6 @@
 import logging
 import time
-from dataclasses import dataclass, field
-from math import sqrt
+from dataclasses import dataclass
 from typing import ClassVar
 
 import numpy as np
@@ -9,14 +8,8 @@ import numpy as np
 logger = logging.getLogger("GUI.boids")
 
 
-def distance(
-    p1: tuple[float, float] | list[float], p2: tuple[float, float] | list[float]
-):
-    return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
-
-
 @dataclass
-class Agents:
+class Boids:
     positions: np.ndarray
     velocities: np.ndarray
     random_generator: ClassVar = None
@@ -40,7 +33,7 @@ class Agents:
 
 
 @dataclass
-class Params:
+class BoidParams:
     visibility: int = 50
     cohesion: float = 0.001
     separation: int = 50
@@ -48,11 +41,10 @@ class Params:
     duration: int = 120
 
 
-class Simulation:
-    def __init__(self, initial_boids: Agents, params: Params):
+class BoidSimulation:
+    def __init__(self, initial_boids: Boids, params: BoidParams):
         self.agents = initial_boids
         self.params = params
-        self.running = False
 
     def update_agents(self):
         for index, agent in enumerate(self.agents.positions):
