@@ -25,7 +25,12 @@ def distance(
 
 
 def iter_agents(frame: list[list[Simulation.Agent]]):
+    # for cell in frame:
+    #     for agent in cell:
+    #         yield (agent.x, agent.y), (agent.vx, agent.vy)
+    #
     for agent in itertools.chain.from_iterable(frame):
+        logger.debug(agent)
         position = (agent.x, agent.y)
         velocity = (agent.vx, agent.vy)
         yield position, velocity
@@ -35,7 +40,7 @@ def iter_agents(frame: list[list[Simulation.Agent]]):
 class Edge:
     p1: tuple[float, float]
     p2: tuple[float, float]
-    edge_type: int = 0
+    edge_type: int = 1
     length: float = 0
     unit_vector: tuple[float, float] = field(init=False)
 
@@ -54,6 +59,12 @@ class Edge:
                 self.p1[0] + dot * self.unit_vector[0],
                 self.p1[1] + dot * self.unit_vector[1],
             )
+
+    @classmethod
+    def from_wall(cls, wall: Simulation.Wall):
+        p1, p2 = wall.endpoints
+        edge_type = wall.state
+        return cls(p1, p2, edge_type)
 
 
 class Canvas:
@@ -78,7 +89,11 @@ class Canvas:
         with dpg.child_window(
             autosize_x=True, autosize_y=True, parent=self.parent
         ) as window:
-            self.plot = dpg.add_plot(width=-1, height=-1, parent=window)
+            with dpg.plot(
+                width=-1, height=-1, parent=window, equal_aspects=True
+            ) as self.plot:
+                axis = dpg.add_plot_axis(dpg.mvYAxis)
+                dpg.add_bar_series([0, 100, 200], [0, 0, 0], weight=1, parent=axis)
             with dpg.item_handler_registry() as registry:
                 dpg.add_item_clicked_handler(
                     button=dpg.mvMouseButton_Middle, callback=self._draw
@@ -130,10 +145,20 @@ class Canvas:
             self.edges.append(edge)
         # logger.debug(self.edges)
 
+    def _draw_edge(self, edge: Edge):
+        if edge.edge_type == 1:
+            dpg.draw_line(
+                edge.p1, edge.p2, parent=self.plot, color=COLOUR, thickness=THICKNESS
+            )
+        self.edges.append(edge)
+
     def start_simulation(self):
         # TODO: This function should create a parameter selector prompt
         params = self.parameter_selector.get_params()
         floorplan = Simulation.Floorplan.make_default_layout()
+        for wall in itertools.chain.from_iterable(floorplan.cells):
+            edge = Edge.from_wall(wall)
+            self._draw_edge(edge)
 
         sim = Simulation.Simulation(params, floorplan)
         task = partial(self.run_simulation, sim)
@@ -165,5 +190,4 @@ class Canvas:
                 position, velocity = agent
                 logger.debug(f"position: {position}, velocity: {velocity}")
                 dpg.configure_item(self.agent_ids[c], center=position)
-
             c += 1
