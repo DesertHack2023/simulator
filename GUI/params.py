@@ -8,7 +8,7 @@ logger = logging.getLogger("GUI.ParameterSelector")
 
 def update_variable(obj, attribute, sender, app_data, user_data):
     setattr(obj, attribute, app_data)
-    logger.debug(f"{obj}.{attribute} changed to {app_data}")
+    logger.debug(f"{obj.__class__.__name__}.{attribute} changed to {app_data}")
 
 
 class ParameterSelector:
