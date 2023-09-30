@@ -72,7 +72,7 @@ class Simulation:
                 x = uniform(0, self.params.basic_parameters.WIDTH)
                 y = uniform(0, self.params.basic_parameters.HEIGHT)
                 cell = self.floorplan.find_cell(x, y)
-                print(x, y, cell, dest)
+                # print(x, y, cell, dest)
                 age = bisect_left(
                     self.params.basic_parameters.POPULATION_DEMOGRAPHICS, random()
                 )
@@ -163,10 +163,10 @@ class Simulation:
                 # Check for changes in the agent cell
                 for wall in self.floorplan.cells[agent.cell]:
                     if wall.intersects((old_pos, (agent.x, agent.y))):
-                        print(
-                            agent.cell,
-                            wall.connection[wall.connection[0] == agent.cell],
-                        )
+                        # print(
+                        #     agent.cell,
+                        #     wall.connection[wall.connection[0] == agent.cell],
+                        # )
                         agent.cell = wall.connection[wall.connection[0] == agent.cell]
 
     def calculateForce(self, agent):
