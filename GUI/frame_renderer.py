@@ -1,6 +1,7 @@
 import itertools
 import logging
 import threading
+import time
 from dataclasses import dataclass, field
 from functools import partial
 from math import sqrt
@@ -30,10 +31,10 @@ def iter_agents(frame: list[list[Simulation.Agent]]):
     #         yield (agent.x, agent.y), (agent.vx, agent.vy)
     #
     for agent in itertools.chain.from_iterable(frame):
-        logger.debug(agent)
+        # logger.debug(agent)
         position = (agent.x, agent.y)
         velocity = (agent.vx, agent.vy)
-        yield position, velocity
+        yield position, agent.age
 
 
 @dataclass
@@ -76,7 +77,7 @@ class Canvas:
         self.parent = parent
         self.edges = edges
         self.parameter_selector = parameter_selector
-        self.agent_ids = []
+        self.agent_ids = dict()
 
         logger.debug(edges)
         self._render()
@@ -154,8 +155,11 @@ class Canvas:
 
     def start_simulation(self):
         # TODO: This function should create a parameter selector prompt
+
         params = self.parameter_selector.get_params()
         floorplan = Simulation.Floorplan.make_default_layout()
+
+        # draws the walls
         for wall in itertools.chain.from_iterable(floorplan.cells):
             edge = Edge.from_wall(wall)
             self._draw_edge(edge)
@@ -170,9 +174,8 @@ class Canvas:
         for agent in self.agent_ids:
             dpg.delete_item(agent)
         self.agent_ids.clear()
-
         for agent in iter_agents(sim.frame):
-            position, velocity = agent
+            position, age = agent
             # arrow_head = position + velocity
             i = dpg.draw_circle(
                 center=position,
@@ -181,13 +184,15 @@ class Canvas:
                 parent=self.plot,
                 thickness=THICKNESS,
             )
-            self.agent_ids.append(i)
+            self.agent_ids[age] = i
 
-        for frame in sim.run():
-            # time.sleep(0.06)
+        logger.debug(len(self.agent_ids))
+
+        for i, frame in enumerate(sim.run()):
+            time.sleep(0.06)
             c = 0
             for agent in iter_agents(frame):
-                position, velocity = agent
-                logger.debug(f"position: {position}, velocity: {velocity}")
-                dpg.configure_item(self.agent_ids[c], center=position)
+                position, age = agent
+                # logger.debug(f"fame count: {i} position: {position}, velocity: {age}")
+                dpg.configure_item(self.agent_ids[age], center=position)
             c += 1

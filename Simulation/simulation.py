@@ -63,7 +63,7 @@ class Simulation:
         -------
         None
         """
-
+        id = 0
         agents = [[] for _ in range(self.floorplan.num_cells)]
         for dest, num_agents in enumerate(self.floorplan.distribution):
             for _ in range(num_agents):
@@ -71,12 +71,9 @@ class Simulation:
                 y = uniform(0, self.params.basic_parameters.HEIGHT)
                 cell = self.floorplan.find_cell(x, y)
                 # print(x, y, cell, dest)
-                age = bisect_left(
-                    self.params.basic_parameters.POPULATION_DEMOGRAPHICS, random()
-                )
-
                 # Create agent
-                agents[cell].append(Agent(cell, x, y, age, dest))
+                agents[cell].append(Agent(cell, x, y, id, dest))
+                id += 1
 
         # Create frame
         self.frame = agents
