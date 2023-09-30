@@ -148,10 +148,10 @@ class Canvas:
 
         for agent in iter_agents(sim.frame):
             position, velocity = agent
-            arrow_head = position + velocity
-            i = dpg.draw_arrow(
-                p2=position,
-                p1=arrow_head,
+            # arrow_head = position + velocity
+            i = dpg.draw_circle(
+                center=position,
+                radius=3,
                 color=(255, 0, 0, 255),
                 parent=self.plot,
                 thickness=THICKNESS,
@@ -163,7 +163,7 @@ class Canvas:
             c = 0
             for agent in iter_agents(frame):
                 position, velocity = agent
-                dpg.configure_item(
-                    self.agent_ids[c], p2=position, p1=position + velocity
-                )
+                logger.debug(f"position: {position}, velocity: {velocity}")
+                dpg.configure_item(self.agent_ids[c], center=position)
+
             c += 1
