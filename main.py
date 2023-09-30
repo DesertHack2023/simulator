@@ -27,13 +27,14 @@ def main():
                     label="Show Performance Metrics", callback=dpg.show_metrics
                 )
                 dpg.add_menu_item(label="Show Debug", callback=dpg.show_debug)
-            with dpg.window(height=350, width=350, label="Parameters") as parameters:
-                selector = GUI.ParameterSelector(parent=parameters, params=Params())
             with dpg.window(height=350, width=350, label="Logger") as logger_window:
                 log = GUI.Logger(parent=logger_window)
                 log.setFormatter(formatter)
                 TimelapseLogger.addHandler(log)
                 GUI_Logger.addHandler(log)
+            with dpg.window(height=350, width=350, label="Parameters") as parameters:
+                selector = GUI.ParameterSelector(parent=parameters, params=Params())
+
             with dpg.window(height=500, width=500, label="Canvas") as frame:
                 GUI.Canvas(parent=frame, edges=[], parameter_selector=selector)
 

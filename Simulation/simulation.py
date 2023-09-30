@@ -84,7 +84,7 @@ class Simulation:
         self.frame = agents
         # exit()
 
-    def runSimulation(self):
+    def run(self):
         """Run the simulation.
 
         Run an agent based simulation based on the
@@ -312,7 +312,7 @@ if __name__ == "__main__":
     plt.xlim(0, 100)
     plt.ylim(0, 100)
 
-    for agents in simulation.runSimulation():
+    for agents in simulation.run():
         # for i in range(len(agents)):
         # print(f"{i}: ", end="")
         # for agent in agents[i]:

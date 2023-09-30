@@ -6,6 +6,13 @@ from dearpygui import dearpygui as dpg
 logger = logging.getLogger("GUI.ParameterSelector")
 
 
+def update_variable(label, variable, sender, app_data, user_data):
+    variable = app_data
+    logger.debug(
+        f"Sender: {sender}, app_data: {app_data}, user_data: {user_data}. {label} changed to {variable}"
+    )
+
+
 class ParameterSelector:
     """
     creates a dynamic selection window, based on the Params class
@@ -21,7 +28,6 @@ class ParameterSelector:
         return self.params
 
     def _render(self):
-        # TODO: Bind the values entered by the user to those in the Params object
         logger.debug("Rendering ParameterSelector")
         for field in fields(self.params):
             logger.debug(field)
@@ -32,14 +38,29 @@ class ParameterSelector:
                 for parameter_field in fields(parameter_group):
                     variable = getattr(parameter_group, parameter_field.name)
                     label = parameter_field.name.replace("_", " ").title()
+
+                    def wrapper(label, variable):
+                        def func(sender, app_data, user_data):
+                            update_variable(
+                                label, variable, sender, app_data, user_data
+                            )
+
+                        return func
+
                     match variable:
                         case int():
                             dpg.add_input_int(
-                                parent=node, default_value=variable, label=label
+                                parent=node,
+                                default_value=variable,
+                                label=label,
+                                callback=wrapper(label, variable),
                             )
                         case float():
                             dpg.add_input_float(
-                                parent=node, default_value=variable, label=label
+                                parent=node,
+                                default_value=variable,
+                                label=label,
+                                callback=wrapper(label, variable),
                             )
                         case _:
                             dpg.add_text("haven't done this type yet")

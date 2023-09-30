@@ -1,3 +1,4 @@
+import itertools
 import logging
 import threading
 from dataclasses import dataclass, field
@@ -21,6 +22,13 @@ def distance(
     p1: tuple[float, float] | list[float], p2: tuple[float, float] | list[float]
 ):
     return sqrt((p2[0] - p1[0]) ** 2 + (p2[1] - p1[1]) ** 2)
+
+
+def iter_agents(frame: list[list[Simulation.Agent]]):
+    for agent in itertools.chain.from_iterable(frame):
+        position = (agent.x, agent.y)
+        velocity = (agent.vx, agent.vy)
+        yield position, velocity
 
 
 @dataclass
@@ -138,7 +146,7 @@ class Canvas:
             dpg.delete_item(agent)
         self.agent_ids.clear()
 
-        for agent in sim.agents.iter_agents():
+        for agent in iter_agents(sim.frame):
             position, velocity = agent
             arrow_head = position + velocity
             i = dpg.draw_arrow(
@@ -150,10 +158,10 @@ class Canvas:
             )
             self.agent_ids.append(i)
 
-        for agent in sim.run():
+        for frame in sim.run():
             # time.sleep(0.06)
             c = 0
-            for agent in agent.iter_agents():
+            for agent in iter_agents(frame):
                 position, velocity = agent
                 dpg.configure_item(
                     self.agent_ids[c], p2=position, p1=position + velocity
