@@ -9,9 +9,9 @@ from Simulation import Params
 def main():
     dpg.create_context()
     dpg.create_viewport(title="People Simulator")
-    TimelapseLogger = logging.getLogger("Simulation")
+    SimulationLogger = logging.getLogger("Simulation")
     GUI_Logger = logging.getLogger("GUI")
-    TimelapseLogger.setLevel(logging.DEBUG)
+    SimulationLogger.setLevel(logging.DEBUG)
     GUI_Logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(
         "[{asctime}] [{levelname:<8}] {name}: {message}", "%H:%M:%S", style="{"
@@ -30,7 +30,7 @@ def main():
             with dpg.window(height=350, width=350, label="Logger") as logger_window:
                 log = GUI.Logger(parent=logger_window)
                 log.setFormatter(formatter)
-                TimelapseLogger.addHandler(log)
+                SimulationLogger.addHandler(log)
                 GUI_Logger.addHandler(log)
             with dpg.window(height=350, width=350, label="Parameters") as parameters:
                 selector = GUI.ParameterSelector(parent=parameters, params=Params())

@@ -1,7 +1,10 @@
+import logging
 from bisect import bisect_left
 from datetime import datetime
 from math import inf, sqrt
 from random import random, seed, uniform
+
+logger = logging.getLogger("Simulation.Core")
 
 from .agent import Agent
 
@@ -143,12 +146,15 @@ class Simulation:
                 fx, fy = self.calculateForce(agent)
 
                 # Update velocity
-                print('DEBUG')
-                print(agent.x, agent.y, agent.vx, agent.vy)
-                print(fx, fy)
+                logger.debug(
+                    f"Initial Position: {agent.x, agent.y}, Velocity: {agent.vx, agent.vy}"
+                )
                 agent.vx += fx
                 agent.vy += fy
                 v = sqrt(agent.vx**2 + agent.vy**2)
+                logger.debug(
+                    f"Max Velocity: {self.params.basic_parameters.MAX_VELOCITY}"
+                )
                 if v > self.params.basic_parameters.MAX_VELOCITY:
                     agent.vx *= self.params.basic_parameters.MAX_VELOCITY / v
                     agent.vy *= self.params.basic_parameters.MAX_VELOCITY / v
@@ -157,7 +163,9 @@ class Simulation:
                 old_pos = (agent.x, agent.y)
                 agent.x += agent.vx
                 agent.y += agent.vy
-                print(agent.x, agent.y, agent.vx, agent.vy)
+                logger.debug(
+                    f"Final Position: {agent.x, agent.y}, Velocity: {agent.vx, agent.vy}"
+                )
 
                 # Check for changes in the agent cell
                 for wall in self.floorplan.cells[agent.cell]:
@@ -219,7 +227,7 @@ class Simulation:
                 vec_length != 0
                 and vec_length < self.params.repulsion_factors.AGENT_FORCE_MARGIN
             ):
-                print(vec_length)
+                logger.debug(f"Vector Length: {vec_length}")
                 force_per_length = (
                     self.params.repulsion_factors.AGENT_FORCE_CONSTANT / vec_length**3
                 )
@@ -261,5 +269,5 @@ class Simulation:
             fx += vec[0] * force_per_length
             fy += vec[1] * force_per_length
 
-        print(fx, fy)
+        logger.debug(f"Forces: {fx, fy}")
         return (fx, fy)
