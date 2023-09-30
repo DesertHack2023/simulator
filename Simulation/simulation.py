@@ -4,8 +4,6 @@ from math import inf, sqrt
 from random import random, seed, uniform
 
 from .agent import Agent
-from .floorplan import Floorplan
-from .params import Params
 
 
 class Simulation:
@@ -148,6 +146,9 @@ class Simulation:
                 fx, fy = self.calculateForce(agent)
 
                 # Update velocity
+                print('DEBUG')
+                print(agent.x, agent.y, agent.vx, agent.vy)
+                print(fx, fy)
                 agent.vx += fx
                 agent.vy += fy
                 v = sqrt(agent.vx**2 + agent.vy**2)
@@ -159,6 +160,7 @@ class Simulation:
                 old_pos = (agent.x, agent.y)
                 agent.x += agent.vx
                 agent.y += agent.vy
+                print(agent.x, agent.y, agent.vx, agent.vy)
 
                 # Check for changes in the agent cell
                 for wall in self.floorplan.cells[agent.cell]:
@@ -207,8 +209,8 @@ class Simulation:
                 force_per_length = (
                     self.params.repulsion_factors.WALL_FORCE_CONSTANT / per_length
                 )
-                fx += per[0] * force_per_length
-                fy += per[1] * force_per_length
+                fx -= per[0] * force_per_length
+                fy -= per[1] * force_per_length
 
         # Agent-agent forces
         for other_agent in self.frame[agent.cell]:
@@ -220,6 +222,7 @@ class Simulation:
                 vec_length != 0
                 and vec_length < self.params.repulsion_factors.AGENT_FORCE_MARGIN
             ):
+                print(vec_length)
                 force_per_length = (
                     self.params.repulsion_factors.AGENT_FORCE_CONSTANT / vec_length**3
                 )
@@ -261,4 +264,5 @@ class Simulation:
             fx += vec[0] * force_per_length
             fy += vec[1] * force_per_length
 
+        print(fx, fy)
         return (fx, fy)
