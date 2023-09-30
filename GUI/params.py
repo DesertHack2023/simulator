@@ -6,11 +6,9 @@ from dearpygui import dearpygui as dpg
 logger = logging.getLogger("GUI.ParameterSelector")
 
 
-def update_variable(label, variable, sender, app_data, user_data):
-    variable = app_data
-    logger.debug(
-        f"Sender: {sender}, app_data: {app_data}, user_data: {user_data}. {label} changed to {variable}"
-    )
+def update_variable(obj, attribute, sender, app_data, user_data):
+    setattr(obj, attribute, app_data)
+    logger.debug(f"{obj}.{attribute} changed to {app_data}")
 
 
 class ParameterSelector:
@@ -39,11 +37,9 @@ class ParameterSelector:
                     variable = getattr(parameter_group, parameter_field.name)
                     label = parameter_field.name.replace("_", " ").title()
 
-                    def wrapper(label, variable):
+                    def wrapper(obj, attribute):
                         def func(sender, app_data, user_data):
-                            update_variable(
-                                label, variable, sender, app_data, user_data
-                            )
+                            update_variable(obj, attribute, sender, app_data, user_data)
 
                         return func
 
@@ -53,14 +49,14 @@ class ParameterSelector:
                                 parent=node,
                                 default_value=variable,
                                 label=label,
-                                callback=wrapper(label, variable),
+                                callback=wrapper(parameter_group, parameter_field.name),
                             )
                         case float():
                             dpg.add_input_float(
                                 parent=node,
                                 default_value=variable,
                                 label=label,
-                                callback=wrapper(label, variable),
+                                callback=wrapper(parameter_group, parameter_field.name),
                             )
                         case _:
                             dpg.add_text("haven't done this type yet")

@@ -171,7 +171,7 @@ class Canvas:
         thread.start()
 
     def run_simulation(self, sim):
-        for agent in self.agent_ids:
+        for agent in self.agent_ids.values():
             dpg.delete_item(agent)
         self.agent_ids.clear()
         for agent in iter_agents(sim.frame):
@@ -189,7 +189,7 @@ class Canvas:
         logger.debug(len(self.agent_ids))
 
         for i, frame in enumerate(sim.run()):
-            time.sleep(0.06)
+            # time.sleep(0.06)
             c = 0
             for agent in iter_agents(frame):
                 position, age = agent
