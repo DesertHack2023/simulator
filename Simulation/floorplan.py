@@ -1,7 +1,10 @@
+import logging
 from collections import defaultdict
 from math import inf
 
 from .wall import Wall
+
+logger = logging.getLogger("Simulation.Floorplan")
 
 
 class Floorplan:
@@ -136,7 +139,6 @@ class Floorplan:
         int
                 The cell no. that the point belongs to
         """
-
         for cell_no in range(1, len(self.cells)):
             # Check number of walls that intersect with the line
             # (0, y) -> (x, y)
@@ -146,8 +148,12 @@ class Floorplan:
 
             # If the num of intersections is odd, the point is inside the cell
             if intersections % 2 == 1:
+                logger.debug(f"{x, y} lies in cell {cell_no}")
                 return cell_no
 
+        logger.debug(f"{x, y} lies in cell 0")
+
+        # return 1 if x > 50 else 2
         # Outside all cells
         return 0
 

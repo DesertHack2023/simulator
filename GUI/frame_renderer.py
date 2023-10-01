@@ -85,7 +85,7 @@ class Canvas:
 
     def _render(self):
         dpg.add_button(
-            label="Boid Sim", parent=self.parent, callback=self.start_simulation
+            label="Run Sim", parent=self.parent, callback=self.start_simulation
         )
         with dpg.child_window(
             autosize_x=True, autosize_y=True, parent=self.parent

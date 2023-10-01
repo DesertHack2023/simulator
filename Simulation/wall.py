@@ -228,7 +228,7 @@ class Wall:
 
         # Check if 0 <= k <= 1 (foot of perpendicular lies on the line segment)
         k = (p[0] * q[0] + p[1] * q[1]) / q_len**2
-        if k < 0 or k > 1:
+        if k < -0.1 or k > 1.1:
             return (inf, inf)
 
         # Return perpendicular
