@@ -24,9 +24,9 @@ class Repulsion_Factors:
     CONTACT_RADIUS_SQUARED: float = CONTACT_RADIUS**2
 
     # Forces
-    WALL_FORCE_CONSTANT: float = 1
+    WALL_FORCE_CONSTANT: float = 2
     WALL_FORCE_MARGIN: float = 10
-    AGENT_FORCE_CONSTANT: float = 1
+    AGENT_FORCE_CONSTANT: float = 10
     AGENT_FORCE_MARGIN: float = 5
     GOAL_FORCE_CONSTANT: float = 100
 

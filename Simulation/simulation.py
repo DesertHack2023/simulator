@@ -7,6 +7,7 @@ from random import random, seed, uniform
 logger = logging.getLogger("Simulation.Core")
 
 from .agent import Agent
+from .wall import Wall
 
 
 class Simulation:
@@ -201,6 +202,9 @@ class Simulation:
 
         # Wall forces
         for wall in self.floorplan.cells[agent.cell]:
+            if wall.state == Wall.DOOR:
+                continue
+
             # Get the perpendicular
             per = wall.get_perpendicular((agent.x, agent.y))
             if per == (inf, inf):
