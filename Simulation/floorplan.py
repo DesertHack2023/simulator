@@ -177,4 +177,4 @@ class Floorplan:
             cells[wall.connection[0]].append(wall)
             cells[wall.connection[1]].append(wall)
 
-        return cls([cells[i] for i in range(len(cells))], [0, 50, 50])
+        return cls([cells[i] for i in range(len(cells))], [0, 0, 50])
