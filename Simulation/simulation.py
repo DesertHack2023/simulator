@@ -160,7 +160,7 @@ class Simulation:
                     agent.vy *= self.params.basic_parameters.MAX_VELOCITY / v
 
                 # Update position
-                old_pos = (agent.x, agent.y)
+                # old_pos = (agent.x, agent.y)
                 agent.x += agent.vx
                 agent.y += agent.vy
                 logger.debug(
@@ -168,13 +168,14 @@ class Simulation:
                 )
 
                 # Check for changes in the agent cell
-                for wall in self.floorplan.cells[agent.cell]:
-                    if wall.intersects((old_pos, (agent.x, agent.y))):
-                        # print(
-                        #     agent.cell,
-                        #     wall.connection[wall.connection[0] == agent.cell],
-                        # )
-                        agent.cell = wall.connection[wall.connection[0] == agent.cell]
+                # for wall in self.floorplan.cells[agent.cell]:
+                #     if wall.intersects((old_pos, (agent.x, agent.y))):
+                #         # print(
+                #         #     agent.cell,
+                #         #     wall.connection[wall.connection[0] == agent.cell],
+                #         # )
+                #         agent.cell = wall.connection[wall.connection[0] == agent.cell]
+                agent.cell = (agent.x > 50) + 1
 
     def calculateForce(self, agent):
         """Calculates the forces acting on a given agent
@@ -214,8 +215,8 @@ class Simulation:
                 force_per_length = (
                     self.params.repulsion_factors.WALL_FORCE_CONSTANT / per_length
                 )
-                fx -= per[0] * force_per_length
-                fy -= per[1] * force_per_length
+                fx += per[0] * force_per_length
+                fy += per[1] * force_per_length
 
         # Agent-agent forces
         for other_agent in self.frame[agent.cell]:

@@ -25,10 +25,10 @@ class Repulsion_Factors:
 
     # Forces
     WALL_FORCE_CONSTANT: float = 1
-    WALL_FORCE_MARGIN: float = 100
+    WALL_FORCE_MARGIN: float = 10
     AGENT_FORCE_CONSTANT: float = 1
-    AGENT_FORCE_MARGIN: float = 1
-    GOAL_FORCE_CONSTANT: float = 1
+    AGENT_FORCE_MARGIN: float = 5
+    GOAL_FORCE_CONSTANT: float = 100
 
 
 @dataclass

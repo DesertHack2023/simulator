@@ -139,23 +139,24 @@ class Floorplan:
         int
                 The cell no. that the point belongs to
         """
-        for cell_no in range(1, len(self.cells)):
-            # Check number of walls that intersect with the line
-            # (0, y) -> (x, y)
-            intersections = 0
-            for wall in self.cells[cell_no]:
-                intersections += wall.intersects(((0, y), (x, y)))
-
-            # If the num of intersections is odd, the point is inside the cell
-            if intersections % 2 == 1:
-                logger.debug(f"{x, y} lies in cell {cell_no}")
-                return cell_no
-
-        logger.debug(f"{x, y} lies in cell 0")
-
-        # return 1 if x > 50 else 2
-        # Outside all cells
-        return 0
+        # for cell_no in range(1, len(self.cells)):
+        #     # Check number of walls that intersect with the line
+        #     # (0, y) -> (x, y)
+        #     intersections = 0
+        #     for wall in self.cells[cell_no]:
+        #         intersections += wall.intersects(((0, y), (x, y)))
+        #
+        #     # If the num of intersections is odd, the point is inside the cell
+        #     if intersections % 2 == 1:
+        #         logger.debug(f"{x, y} lies in cell {cell_no}")
+        #         return cell_no
+        #
+        # logger.debug(f"{x, y} lies in cell 0")
+        #
+        # # return 1 if x > 50 else 2
+        # # Outside all cells
+        # return 0
+        return (x > 50) + 1
 
     @classmethod
     def make_default_layout(cls):
@@ -176,4 +177,4 @@ class Floorplan:
             cells[wall.connection[0]].append(wall)
             cells[wall.connection[1]].append(wall)
 
-        return cls([cells[i] for i in range(len(cells))], [0, 0, 100])
+        return cls([cells[i] for i in range(len(cells))], [0, 50, 50])
