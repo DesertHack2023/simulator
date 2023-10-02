@@ -5,7 +5,7 @@ from typing import ClassVar
 
 import numpy as np
 
-logger = logging.getLogger("GUI.boids")
+logger = logging.getLogger("Simulation.Boids")
 
 
 @dataclass
@@ -41,15 +41,22 @@ class BoidParams:
     duration: int = 120
 
 
+@dataclass
+class Params:
+    boid_params: BoidParams = BoidParams()
+
+
 class BoidSimulation:
-    def __init__(self, initial_boids: Boids, params: BoidParams):
+    def __init__(self, initial_boids: Boids, params: Params):
         self.agents = initial_boids
         self.params = params
 
     def update_agents(self):
         for index, agent in enumerate(self.agents.positions):
-            cohesion_alignment_mask = self.mask(agent, self.params.visibility)
-            separation_mask = self.mask(agent, self.params.separation)
+            cohesion_alignment_mask = self.mask(
+                agent, self.params.boid_params.visibility
+            )
+            separation_mask = self.mask(agent, self.params.boid_params.separation)
             cohesion_alignment_positions = np.ma.array(
                 self.agents.positions, mask=cohesion_alignment_mask
             )
@@ -71,24 +78,25 @@ class BoidSimulation:
             )
         # self.bound_positions()
         scale = np.sqrt(np.sum(self.agents.velocities**2, axis=1))
-        self.agents.velocities /= scale[:, np.newaxis]
+        # self.agents.velocities /= scale[:, np.newaxis]
         # logger.debug(self.agents.velocities)
         self.agents.positions += self.agents.velocities
 
     def cohesion_fn(self, positions, reference):
         centre = np.mean(positions, axis=0)
-        vector_to_centre = (centre - reference) * self.params.cohesion
+        vector_to_centre = (centre - reference) * self.params.boid_params.cohesion
         return vector_to_centre
 
     def alignment_fn(self, velocities, reference):
         mean_velocity = np.mean(velocities, axis=0)
-        vector_to_mean_velocity = (mean_velocity - reference) * self.params.alignment
+        vector_to_mean_velocity = (
+            mean_velocity - reference
+        ) * self.params.boid_params.alignment
         return vector_to_mean_velocity
 
     def separation_fn(self, positions, reference):
         diff = reference - positions
-        scale = np.sqrt(np.sum(diff**2, axis=1)) ** 2
-        diff /= scale[:, np.newaxis]
+        # scale = np.sqrt(np.sum(diff**2, axis=1))
         return np.mean(diff, axis=0)
 
     def avoid_walls(self):
@@ -116,11 +124,11 @@ class BoidSimulation:
         return np.stack((mask, mask), axis=1)
 
     def run(self):
-        for i in range(self.params.duration):
+        for i in range(self.params.boid_params.duration):
             start = time.perf_counter()
             self.update_agents()
             yield self.agents
             t = time.perf_counter() - start
             logger.debug(
-                f"Frame {i + 1}/{self.params.duration} computed in {t:.3f} seconds"
+                f"Frame {i + 1}/{self.params.boid_params.duration} computed in {t:.3f} seconds"
             )

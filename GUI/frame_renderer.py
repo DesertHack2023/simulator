@@ -77,15 +77,15 @@ class Canvas:
         self.parent = parent
         self.edges = edges
         self.parameter_selector = parameter_selector
-        self.agent_ids = dict()
+        self.agent_ids = []
 
         logger.debug(edges)
         self._render()
         logger.debug("rendered map")
 
     def _render(self):
-        dpg.add_button(
-            label="Boid Sim", parent=self.parent, callback=self.start_simulation
+        self.run_button = dpg.add_button(
+            label="Run Sim", parent=self.parent, callback=self.start_simulation
         )
         with dpg.child_window(
             autosize_x=True, autosize_y=True, parent=self.parent
@@ -154,45 +154,44 @@ class Canvas:
         self.edges.append(edge)
 
     def start_simulation(self):
-        # TODO: This function should create a parameter selector prompt
-
         params = self.parameter_selector.get_params()
-        floorplan = Simulation.Floorplan.make_default_layout()
+        initial_boids = Simulation.Boids.random_from_seed(2023)
+        # floorplan = Simulation.Floorplan.make_default_layout()
+        #
+        # # draws the walls
+        # for wall in itertools.chain.from_iterable(floorplan.cells):
+        #     edge = Edge.from_wall(wall)
+        #     self._draw_edge(edge)
 
-        # draws the walls
-        for wall in itertools.chain.from_iterable(floorplan.cells):
-            edge = Edge.from_wall(wall)
-            self._draw_edge(edge)
-
-        sim = Simulation.Simulation(params, floorplan)
+        sim = Simulation.BoidSimulation(initial_boids, params)
         task = partial(self.run_simulation, sim)
         thread = threading.Thread(target=task, args=(), daemon=True)
-
         thread.start()
 
     def run_simulation(self, sim):
-        for agent in self.agent_ids.values():
+        for agent in self.agent_ids:
             dpg.delete_item(agent)
         self.agent_ids.clear()
-        for agent in iter_agents(sim.frame):
-            position, age = agent
-            # arrow_head = position + velocity
-            i = dpg.draw_circle(
-                center=position,
-                radius=3,
+        dpg.hide_item(self.run_button)
+        for agent in sim.agents.iter_agents():
+            position, velocity = agent
+            arrow_head = position + velocity
+            i = dpg.draw_arrow(
+                p2=position,
+                p1=arrow_head,
                 color=(255, 0, 0, 255),
                 parent=self.plot,
                 thickness=THICKNESS,
             )
-            self.agent_ids[age] = i
+            self.agent_ids.append(i)
 
-        logger.debug(len(self.agent_ids))
-
-        for i, frame in enumerate(sim.run()):
+        for agent in sim.run():
             # time.sleep(0.06)
             c = 0
-            for agent in iter_agents(frame):
-                position, age = agent
-                # logger.debug(f"fame count: {i} position: {position}, velocity: {age}")
-                dpg.configure_item(self.agent_ids[age], center=position)
-            c += 1
+            for agent in agent.iter_agents():
+                position, velocity = agent
+                dpg.configure_item(
+                    self.agent_ids[c], p2=position, p1=position + velocity
+                )
+                c += 1
+        dpg.show_item(self.run_button)
