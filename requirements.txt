@@ -1,6 +1,4 @@
-anytree==2.9.0
 dearpygui==1.9.1
 matplotlib
-numba
 numpy
 pre-commit==3.3.3
