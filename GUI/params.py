@@ -59,4 +59,4 @@ class ParameterSelector:
                                 callback=wrapper(parameter_group, parameter_field.name),
                             )
                         case _:
-                            dpg.add_text("haven't done this type yet")
+                            logger.debug("haven't done this type yet")

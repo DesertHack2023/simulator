@@ -1,4 +1,5 @@
 import logging
+
 # from bisect import bisect_left
 from datetime import datetime
 from math import inf, sqrt
@@ -154,9 +155,6 @@ class Simulation:
                 agent.vx += fx
                 agent.vy += fy
                 v = sqrt(agent.vx**2 + agent.vy**2)
-                logger.debug(
-                    f"Max Velocity: {self.params.basic_parameters.MAX_VELOCITY}"
-                )
                 if v > self.params.basic_parameters.MAX_VELOCITY:
                     agent.vx *= self.params.basic_parameters.MAX_VELOCITY / v
                     agent.vy *= self.params.basic_parameters.MAX_VELOCITY / v
@@ -219,8 +217,14 @@ class Simulation:
         """
 
         # Random forces
-        fx = uniform(-self.params.repulsion_factors.RANDOM_FORCE_CONSTANT, self.params.repulsion_factors.RANDOM_FORCE_CONSTANT)
-        fy = uniform(-self.params.repulsion_factors.RANDOM_FORCE_CONSTANT, self.params.repulsion_factors.RANDOM_FORCE_CONSTANT)
+        fx = uniform(
+            -self.params.repulsion_factors.RANDOM_FORCE_CONSTANT,
+            self.params.repulsion_factors.RANDOM_FORCE_CONSTANT,
+        )
+        fy = uniform(
+            -self.params.repulsion_factors.RANDOM_FORCE_CONSTANT,
+            self.params.repulsion_factors.RANDOM_FORCE_CONSTANT,
+        )
 
         # Wall forces
         for wall in self.floorplan.cells[agent.cell]:

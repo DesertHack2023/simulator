@@ -6,13 +6,10 @@ class Basic_Params:
     # Basic model related parameters
     WIDTH: int = 100
     HEIGHT: int = 100
-    POPULATION_SIZE: int = 100
     POPULATION_DEMOGRAPHICS: list[int | float] = field(default_factory=list)
     SIMULATION_LENGTH: int = 1000
-    MAX_MOVEMENT: float = 0.05
-    TRAVEL_RATE: float = 0.1
     RANDOM_SEED: int = 0
-    MAX_VELOCITY: int = 1
+    MAX_VELOCITY: float = 1.0
 
     def __post_init__(self):
         self.POPULATION_DEMOGRAPHICS = [0.35, 0.8, 0.95, 1]
@@ -25,10 +22,10 @@ class Repulsion_Factors:
 
     # Forces
     WALL_FORCE_CONSTANT: float = 2
-    WALL_FORCE_MARGIN: float = 10
+    WALL_FORCE_MARGIN: float = 5
     AGENT_FORCE_CONSTANT: float = 5
     AGENT_FORCE_MARGIN: float = 10
-    GOAL_FORCE_CONSTANT: float = 100
+    GOAL_FORCE_CONSTANT: float = 15
     RANDOM_FORCE_CONSTANT: float = 0
 
 

@@ -1,6 +1,7 @@
 import itertools
 import logging
 import threading
+
 # import time
 from dataclasses import dataclass, field
 from functools import partial
@@ -180,8 +181,9 @@ class Canvas:
             # arrow_head = position + velocity
             i = dpg.draw_circle(
                 center=position,
-                radius=3,
+                radius=1.5,
                 color=(255, 0, 0, 255),
+                fill=(255, 0, 0, 255),
                 parent=self.plot,
                 thickness=THICKNESS,
             )
