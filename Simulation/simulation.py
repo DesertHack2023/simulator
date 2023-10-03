@@ -164,6 +164,22 @@ class Simulation:
                 # old_pos = (agent.x, agent.y)
                 agent.x += agent.vx
                 agent.y += agent.vy
+
+                # Reflect of walls
+                if agent.x < 0:
+                    agent.x = -agent.x
+                    agent.vx = -agent.vx
+                elif agent.x > 100:
+                    agent.x = 200 - agent.x
+                    agent.vx = -agent.vx
+
+                if agent.y < 0:
+                    agent.y = -agent.y
+                    agent.vy = -agent.vy
+                elif agent.y > 100:
+                    agent.y = 200 - agent.y
+                    agent.vy = -agent.vy
+
                 logger.debug(
                     f"Final Position: {agent.x, agent.y}, Velocity: {agent.vx, agent.vy}"
                 )
@@ -197,8 +213,9 @@ class Simulation:
                 The X and Y components of the final force
         """
 
-        fx = 0
-        fy = 0
+        # Random forces
+        fx = uniform(-self.params.repulsion_factors.RANDOM_FORCE_CONSTANT, self.params.repulsion_factors.RANDOM_FORCE_CONSTANT)
+        fy = uniform(-self.params.repulsion_factors.RANDOM_FORCE_CONSTANT, self.params.repulsion_factors.RANDOM_FORCE_CONSTANT)
 
         # Wall forces
         for wall in self.floorplan.cells[agent.cell]:

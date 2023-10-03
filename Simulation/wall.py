@@ -214,22 +214,29 @@ class Wall:
         # If the point is a and the line segment is bc
         # Let d be a point on bc such that (a - d).(c - b) = 0
         # d = b + k(c - b)
-        # where k = (a - b).(c - b)
+        # where k = (a - b).(c - b) / |c - b| ^ 2
         # a - d, the perpensidular is equal to (a - b) - (|(a - b).(c - b)| / |c - b|^2) (c - b)
         # i.e if the p = a - b and q = (c - b) / |c - b|
         # then a - d = p - (p.q)q
 
-        p = (point[0] - self.endpoints[0][0], point[1] - self.endpoints[0][1])
+        p = (
+            point[0] - self.endpoints[0][0],
+            point[1] - self.endpoints[0][1]
+        )
         q = (
             self.endpoints[1][0] - self.endpoints[0][0],
             self.endpoints[1][1] - self.endpoints[0][1],
         )
-        q_len = sqrt(q[0] ** 2 + q[1] ** 2)
+        q_len_sqr = q[0] ** 2 + q[1] ** 2
 
         # Check if 0 <= k <= 1 (foot of perpendicular lies on the line segment)
-        k = (p[0] * q[0] + p[1] * q[1]) / q_len**2
+        k = (p[0] * q[0] + p[1] * q[1]) / q_len_sqr
         if k < 0 or k > 1:
             return (inf, inf)
 
         # Return perpendicular
-        return (p[0] - k * q[0], p[1] - k * p[1])
+        return (p[0] - k * q[0], p[1] - k * q[1])
+
+if __name__ == '__main__':
+    wall = Wall(((100, 0), (100, 100)), 1, (0, 2))
+    print(wall.get_perpendicular((99.9, 99.9)))

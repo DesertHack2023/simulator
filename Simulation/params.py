@@ -29,6 +29,7 @@ class Repulsion_Factors:
     AGENT_FORCE_CONSTANT: float = 10
     AGENT_FORCE_MARGIN: float = 5
     GOAL_FORCE_CONSTANT: float = 100
+    RANDOM_FORCE_CONSTANT: float = 0
 
 
 @dataclass
