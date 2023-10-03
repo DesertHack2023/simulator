@@ -84,7 +84,7 @@ class Canvas:
         logger.debug("rendered map")
 
     def _render(self):
-        dpg.add_button(
+        self.run_button = dpg.add_button(
             label="Run Sim", parent=self.parent, callback=self.start_simulation
         )
         with dpg.child_window(
@@ -171,6 +171,7 @@ class Canvas:
         thread.start()
 
     def run_simulation(self, sim):
+        dpg.hide_item(self.run_button)
         for agent in self.agent_ids.values():
             dpg.delete_item(agent)
         self.agent_ids.clear()
@@ -196,3 +197,4 @@ class Canvas:
                 # logger.debug(f"fame count: {i} position: {position}, velocity: {age}")
                 dpg.configure_item(self.agent_ids[age], center=position)
             c += 1
+        dpg.show_item(self.run_button)
