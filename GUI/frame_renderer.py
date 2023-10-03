@@ -1,7 +1,7 @@
 import itertools
 import logging
 import threading
-import time
+# import time
 from dataclasses import dataclass, field
 from functools import partial
 from math import sqrt
@@ -33,7 +33,7 @@ def iter_agents(frame: list[list[Simulation.Agent]]):
     for agent in itertools.chain.from_iterable(frame):
         # logger.debug(agent)
         position = (agent.x, agent.y)
-        velocity = (agent.vx, agent.vy)
+        # velocity = (agent.vx, agent.vy)
         yield position, agent.age
 
 

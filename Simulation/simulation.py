@@ -1,8 +1,8 @@
 import logging
-from bisect import bisect_left
+# from bisect import bisect_left
 from datetime import datetime
 from math import inf, sqrt
-from random import random, seed, uniform
+from random import seed, uniform
 
 logger = logging.getLogger("Simulation.Core")
 
@@ -142,6 +142,7 @@ class Simulation:
         """
 
         # Calculate force on each agent
+        new_frame = [[] for _ in range(self.floorplan.num_cells)]
         for cell_no, agents in enumerate(self.frame):
             for agent in agents:
                 fx, fy = self.calculateForce(agent)
@@ -193,6 +194,10 @@ class Simulation:
                 #         # )
                 #         agent.cell = wall.connection[wall.connection[0] == agent.cell]
                 agent.cell = (agent.x > 50) + 1
+                new_frame[agent.cell].append(agent)
+
+        # Update frame
+        self.frame = new_frame
 
     def calculateForce(self, agent):
         """Calculates the forces acting on a given agent
