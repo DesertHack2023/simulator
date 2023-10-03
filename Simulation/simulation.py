@@ -71,7 +71,7 @@ class Simulation:
         agents = [[] for _ in range(self.floorplan.num_cells)]
         for dest, num_agents in enumerate(self.floorplan.distribution):
             for _ in range(num_agents):
-                x = uniform(0, self.params.basic_parameters.WIDTH)
+                x = uniform(0, self.params.basic_parameters.WIDTH / 2)
                 y = uniform(0, self.params.basic_parameters.HEIGHT)
                 cell = self.floorplan.find_cell(x, y)
                 # print(x, y, cell, dest)
